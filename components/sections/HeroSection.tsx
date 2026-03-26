@@ -24,8 +24,8 @@ export default function HeroSection() {
             </p>
 
             <h1 className="mt-4 text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
-              You are not broken.
-              <span className="block text-foreground/70">You are becoming.</span>
+              You don’t need fixing.
+              <span className="block text-foreground/70">You need clarity.</span>
             </h1>
 
             <p className="mt-6 max-w-2xl text-base leading-relaxed text-foreground/70 sm:text-lg lg:mx-0 mx-auto">
