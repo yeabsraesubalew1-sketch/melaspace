@@ -1,26 +1,275 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    /* MelaLater Coaching palette */
+    --mela-deep-mocha: 16 27% 24%;
+    --mela-warm-beige: 15 17% 82%;
+    --mela-light-latte: 15 11% 93%;
+    --mela-almond-white: 45 27% 97%;
+    --mela-caramel-brown: 16 17% 47%;
+    --mela-soft-sand: 35 53% 91%;
+    --mela-muted-gold: 16 16% 69%;
+
+    /* Base */
+    --background: 45 27% 97%;
+    --foreground: 16 27% 24%;
+
+    /* Surfaces */
+    --surface: 35 53% 91%;
+    --surface-muted: 15 11% 93%;
+
+    /* Borders */
+    --border: 16 16% 69%;
+
+    /* Primary CTA */
+    --primary: 16 27% 24%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Accent */
+    --accent: 16 17% 47%;
+    --accent-foreground: 45 27% 97%;
+
+    /* Footer */
+    --footer: 16 27% 24%;
+
+    /* Admin UI theme */
+    --admin-chip-bg: 35 56% 94%;
+    --admin-chip-border: 34 45% 76%;
+    --admin-control-bg: 34 52% 90%;
+    --admin-control-bg-hover: 33 56% 84%;
+    --admin-control-border: 34 42% 76%;
+    --admin-icon: 28 16% 45%;
+    --admin-check-border: 30 45% 45%;
+    --admin-check-fill: 31 58% 72%;
+    --admin-input-border: 34 35% 74%;
+    --admin-input-border-active: 33 42% 58%;
+
+    --admin-success: 140 56% 46%;
+    --admin-success-hover: 140 58% 51%;
+    --admin-success-ring: 140 54% 70%;
+
+    --admin-danger: 0 72% 56%;
+    --admin-danger-bg: 0 86% 97%;
+    --admin-danger-bg-hover: 0 86% 93%;
+    --admin-danger-border: 0 63% 83%;
+    --admin-danger-ring: 0 68% 72%;
+
+    --admin-muted-btn-bg: 35 40% 95%;
+    --admin-muted-btn-bg-hover: 35 42% 91%;
+    --admin-muted-btn-border: 34 35% 78%;
+    --admin-muted-btn-ring: 34 40% 70%;
+  }
+
+  html {
+    background-color: hsl(var(--background));
+    scroll-behavior: smooth;
+    overflow-x: clip;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    overflow-x: clip;
+  }
+
+  h1,
+  h2 {
+    font-family: var(--font-brand-heading), "Times New Roman", serif;
+    letter-spacing: -0.01em;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer base {
+  img,
+  video,
+  iframe,
+  canvas,
+  svg {
+    max-width: 100%;
+  }
+
+  .editor-wrapper p,
+  .editor-wrapper li,
+  .editor-wrapper h1,
+  .editor-wrapper h2,
+  .editor-wrapper h3,
+  .editor-wrapper h4,
+  .editor-wrapper h5,
+  .editor-wrapper h6 {
+    overflow-wrap: anywhere;
+  }
+
+  .editor-wrapper pre,
+  .editor-wrapper table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  body:has(main[data-no-grid-bg="true"]) .app-grid-bg {
+    display: none;
+  }
+}
+
+@theme {
+  --color-mela-deep-mocha: hsl(var(--mela-deep-mocha));
+  --color-mela-warm-beige: hsl(var(--mela-warm-beige));
+  --color-mela-light-latte: hsl(var(--mela-light-latte));
+  --color-mela-almond-white: hsl(var(--mela-almond-white));
+  --color-mela-caramel-brown: hsl(var(--mela-caramel-brown));
+  --color-mela-soft-sand: hsl(var(--mela-soft-sand));
+  --color-mela-muted-gold: hsl(var(--mela-muted-gold));
+
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+
+  --color-surface: hsl(var(--surface));
+  --color-surface-muted: hsl(var(--surface-muted));
+
+  --color-border: hsl(var(--border));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+
+  --color-footer: hsl(var(--footer));
+
+  --color-admin-chip-bg: hsl(var(--admin-chip-bg));
+  --color-admin-chip-border: hsl(var(--admin-chip-border));
+  --color-admin-control-bg: hsl(var(--admin-control-bg));
+  --color-admin-control-bg-hover: hsl(var(--admin-control-bg-hover));
+  --color-admin-control-border: hsl(var(--admin-control-border));
+  --color-admin-icon: hsl(var(--admin-icon));
+  --color-admin-check-border: hsl(var(--admin-check-border));
+  --color-admin-check-fill: hsl(var(--admin-check-fill));
+  --color-admin-input-border: hsl(var(--admin-input-border));
+  --color-admin-input-border-active: hsl(var(--admin-input-border-active));
+
+  --color-admin-success: hsl(var(--admin-success));
+  --color-admin-success-hover: hsl(var(--admin-success-hover));
+  --color-admin-success-ring: hsl(var(--admin-success-ring));
+
+  --color-admin-danger: hsl(var(--admin-danger));
+  --color-admin-danger-bg: hsl(var(--admin-danger-bg));
+  --color-admin-danger-bg-hover: hsl(var(--admin-danger-bg-hover));
+  --color-admin-danger-border: hsl(var(--admin-danger-border));
+  --color-admin-danger-ring: hsl(var(--admin-danger-ring));
+
+  --color-admin-muted-btn-bg: hsl(var(--admin-muted-btn-bg));
+  --color-admin-muted-btn-bg-hover: hsl(var(--admin-muted-btn-bg-hover));
+  --color-admin-muted-btn-border: hsl(var(--admin-muted-btn-border));
+  --color-admin-muted-btn-ring: hsl(var(--admin-muted-btn-ring));
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium transition duration-150 ease-out focus:outline-none focus:ring-2 focus:ring-accent/40 disabled:opacity-50 disabled:cursor-not-allowed enabled:hover:cursor-pointer enabled:hover:scale-[1.03];
+  }
+
+  .btn-primary {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90;
+  }
+
+  .btn-secondary {
+    @apply bg-surface text-foreground border border-border hover:bg-surface-muted;
+  }
+
+  .btn-ghost {
+    @apply bg-transparent text-foreground hover:bg-surface-muted;
+  }
+}
+
+@layer components {
+  .input {
+    @apply w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-foreground/40 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30;
+  }
+}
+@layer components {
+  .card {
+    @apply rounded-xl border border-border bg-surface-muted/95 shadow-sm backdrop-blur;
+  }
+
+  .card-muted {
+    @apply bg-surface-muted;
+  }
+}
+
+/* Scope all editor styling */
+
+.editor-wrapper h1.ce-header {
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.editor-wrapper h2.ce-header {
+  font-size: 1.75rem;
+  font-weight: 600;
+}
+
+.editor-wrapper h3.ce-header {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.editor-wrapper h4.ce-header {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+/* Proper horizontal rule */
+.editor-wrapper .ce-delimiter {
+  position: relative;
+  height: 1px;
+  background: hsl(var(--border));
+  margin: 2rem 0;
+  font-size: 0;
+  line-height: 0;
+}
+
+.editor-wrapper .ce-delimiter:before {
+  content: none;
+}
+
+.editorjs-content a,
+.editor-wrapper a,
+.editor-wrapper .ce-block a {
+  color: hsl(var(--primary)) !important;
+  background-color: hsl(var(--mela-soft-sand) / 0.8) !important;
+  border-bottom: 1px solid hsl(var(--accent) / 0.45);
+  text-decoration: none !important;
+  font-weight: 600;
+  border-radius: 0.28rem;
+  padding: 0.02rem 0.2rem;
+  transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  word-break: break-word;
+}
+
+.editorjs-content a:hover,
+.editor-wrapper a:hover,
+.editor-wrapper .ce-block a:hover {
+  color: hsl(var(--foreground)) !important;
+  background-color: hsl(var(--mela-warm-beige) / 0.62) !important;
+  border-bottom-color: hsl(var(--foreground) / 0.5);
+}
+
+@layer utilities {
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
 }

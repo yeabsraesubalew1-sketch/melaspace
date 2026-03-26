@@ -6,12 +6,31 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "seed:blogs": "node scripts/seed-blogs.mjs"
   },
   "dependencies": {
+    "@editorjs/delimiter": "^1.4.2",
+    "@editorjs/editorjs": "^2.31.3",
+    "@editorjs/embed": "^2.6.0",
+    "@editorjs/header": "^2.8.8",
+    "@editorjs/inline-code": "^1.5.2",
+    "@editorjs/list": "^2.0.9",
+    "@editorjs/marker": "^1.4.0",
+    "@editorjs/quote": "^2.7.6",
+    "@editorjs/underline": "^1.2.1",
+    "@sotaproject/strikethrough": "^1.0.1",
+    "@upstash/ratelimit": "^2.0.8",
+    "@upstash/redis": "^1.36.2",
+    "editorjs-drag-drop": "^1.1.16",
+    "framer-motion": "^12.38.0",
+    "mongoose": "^9.1.5",
     "next": "16.1.6",
+    "next-auth": "^4.24.13",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "react-hot-toast": "^2.6.0",
+    "resend": "^6.9.4"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
