@@ -129,7 +129,7 @@ export default function InquiryList({
           {/* Pagination */}
           {totalPages > 1 && (
             <nav className="flex justify-center pt-4" aria-label="Inquiry pagination">
-              <div className="flex items-center gap-1">
+              <div className="flex flex-wrap items-center justify-center gap-1">
                 <button
                   onClick={() => goToPage(1)}
                   disabled={currentPage === 1}

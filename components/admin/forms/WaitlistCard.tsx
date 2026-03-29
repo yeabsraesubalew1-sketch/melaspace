@@ -160,16 +160,16 @@ export default function WaitlistCard({ waitlist }: Props) {
 
   return (
     <div className="card p-4 flex flex-col gap-4">
-      <div className="flex justify-between items-start gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
         {/* LEFT */}
-        <div className="space-y-2">
+        <div className="min-w-0 space-y-2">
           {/* Name + Email */}
           <div>
             <p className="font-medium">{waitlist.name}</p>
 
             <a
               href={`mailto:${waitlist.email}?subject=Mela Space Coaching`}
-              className="text-sm text-primary underline"
+              className="block break-all text-sm text-primary underline"
             >
               {waitlist.email}
             </a>
@@ -249,7 +249,7 @@ export default function WaitlistCard({ waitlist }: Props) {
 
         {/* RIGHT */}
         <span
-          className={`text-xs px-2 py-1 rounded border ${statusStyles[status]}`}
+          className={`self-start text-xs px-2 py-1 rounded border ${statusStyles[status]}`}
         >
           {status}
         </span>

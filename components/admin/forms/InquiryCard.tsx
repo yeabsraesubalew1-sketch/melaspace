@@ -150,15 +150,15 @@ export default function InquiryCard({ inquiry }: Props) {
 
   return (
     <div className="card p-4 flex flex-col gap-4">
-      <div className="flex justify-between items-start gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
         {/* LEFT */}
-        <div className="space-y-2">
+        <div className="min-w-0 space-y-2">
           <div>
             <p className="font-medium">{inquiry.name}</p>
 
             <a
               href={`mailto:${inquiry.email}?subject=Mela Space Inquiry`}
-              className="text-sm text-primary underline"
+              className="block break-all text-sm text-primary underline"
             >
               {inquiry.email}
             </a>
@@ -206,7 +206,7 @@ export default function InquiryCard({ inquiry }: Props) {
 
         {/* RIGHT */}
         <span
-          className={`text-xs px-2 py-1 rounded border ${statusStyles[status]}`}
+          className={`self-start text-xs px-2 py-1 rounded border ${statusStyles[status]}`}
         >
           {status}
         </span>
