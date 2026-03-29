@@ -39,7 +39,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: path === "/" ? 1 : path === "/blogs" ? 0.9 : 0.7,
   }));
 
-  const blogRows = await getPublishedBlogsForSitemap();
+  let blogRows: BlogSitemapRecord[] = [];
+
+  try {
+    blogRows = await getPublishedBlogsForSitemap();
+  } catch (error) {
+    const isProduction = process.env.NODE_ENV === "production";
+    const message =
+      "SITEMAP: blog entries unavailable; serving static-only sitemap. Check MongoDB Atlas network access for this environment.";
+
+    if (isProduction) {
+      console.error(message, error);
+    } else {
+      console.warn(message, error);
+    }
+  }
 
   const blogEntries: MetadataRoute.Sitemap = blogRows.map((blog) => ({
     url: absoluteUrl(`/blogs/${blog.slug}`),

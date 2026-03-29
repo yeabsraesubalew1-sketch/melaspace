@@ -112,17 +112,19 @@ export default function ManageCategoriesPopover({
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 transition-opacity duration-200 ${
+      className={`fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/40 px-4 py-6 transition-opacity duration-200 ${
         visible ? "opacity-100" : "opacity-0"
       }`}
       onClick={close}
     >
       <div
-        className={`w-full max-w-xl rounded-xl border border-border bg-background p-5 shadow-xl transition-all duration-200 ${
+        className={`flex max-h-[calc(100dvh-3rem)] w-full max-w-xl flex-col rounded-xl border border-border bg-background p-5 shadow-xl transition-all duration-200 ${
           visible ? "scale-100" : "scale-95"
         }`}
         onClick={(e) => e.stopPropagation()}
       >
+
+      <div className="min-h-0 flex-1 overflow-y-auto pr-1">
 
       {categories.map((cat) => (
         <div
@@ -185,6 +187,8 @@ export default function ManageCategoriesPopover({
 
         </div>
       ))}
+
+      </div>
 
       <button
         onClick={close}

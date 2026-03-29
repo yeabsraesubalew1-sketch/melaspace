@@ -28,7 +28,13 @@ function LoginPageContent() {
         </p>
 
         <button
-          onClick={() => signIn("google", { callbackUrl: "/admin" })}
+          onClick={() =>
+            signIn(
+              "google",
+              { callbackUrl: "/admin" },
+              { prompt: "select_account" }
+            )
+          }
           className="
             mt-6 w-full rounded-md
             bg-primary px-4 py-2

@@ -1,9 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { Suspense } from "react";
 import LogoutButton from "@/components/LogoutButton";
 
 interface NavItem {
@@ -85,15 +84,40 @@ function isSectionActive(pathname: string, items: NavItem[]) {
   return items.some((item) => isItemActive(pathname, item));
 }
 
+type DbHealth = "checking" | "ok" | "down";
+
 export default function AdminShell({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [dbHealth, setDbHealth] = useState<DbHealth>("checking");
+  const [isRefreshingHealth, setIsRefreshingHealth] = useState(false);
   const pathname = usePathname();
 
   const closeSidebar = () => setIsSidebarOpen(false);
+
+  const checkDbHealth = async () => {
+    setIsRefreshingHealth(true);
+
+    try {
+      const res = await fetch("/api/admin/health/db", {
+        method: "GET",
+        cache: "no-store",
+      });
+
+      setDbHealth(res.ok ? "ok" : "down");
+    } catch {
+      setDbHealth("down");
+    } finally {
+      setIsRefreshingHealth(false);
+    }
+  };
+
+  useEffect(() => {
+    checkDbHealth();
+  }, []);
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
@@ -131,7 +155,32 @@ export default function AdminShell({
           </Link>
         </div>
 
-        <LogoutButton />
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={checkDbHealth}
+            disabled={isRefreshingHealth}
+            className="inline-flex items-center gap-2 rounded-md border border-border/70 bg-background px-2 py-1 text-xs text-foreground/75 transition hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-70"
+            aria-live="polite"
+            title="Check database connectivity"
+          >
+            <span
+              className={`h-2 w-2 rounded-full ${
+                dbHealth === "ok"
+                  ? "bg-emerald-500"
+                  : dbHealth === "down"
+                    ? "bg-rose-500"
+                    : "bg-amber-400"
+              }`}
+              aria-hidden="true"
+            />
+            <span>
+              DB {dbHealth === "ok" ? "online" : dbHealth === "down" ? "offline" : "checking"}
+            </span>
+          </button>
+
+          <LogoutButton />
+        </div>
       </header>
 
       <div className="relative flex flex-1">
