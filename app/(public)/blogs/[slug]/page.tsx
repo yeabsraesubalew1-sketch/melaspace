@@ -50,12 +50,12 @@ export async function generateMetadata({
 
   if (!blog) {
     return {
-      title: "Blog not found",
+      title: `Blog not found | ${seoConfig.siteName}`,
     };
   }
 
   return {
-    title: blog.title,
+    title: `${blog.title} | ${seoConfig.siteName}`,
     description: blog.excerpt,
 
     alternates: {
@@ -66,6 +66,7 @@ export async function generateMetadata({
       title: blog.title,
       description: blog.excerpt,
       type: "article",
+      siteName: seoConfig.siteName,
       url: `/blogs/${blog.slug}`,
       publishedTime: blog.publishedAt,
       section: "Blog",
@@ -74,7 +75,7 @@ export async function generateMetadata({
 
     twitter: {
       card: "summary_large_image",
-      title: blog.title,
+      title: `${blog.title} | ${seoConfig.siteName}`,
       description: blog.excerpt,
     },
 

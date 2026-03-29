@@ -66,27 +66,34 @@ export default function Footer() {
             <p className="text-sm font-medium">Connect</p>
             <ul className="mt-3 space-y-2 text-sm text-foreground/70">
               <li>
-                <a
-                  href="mailto:hello@melaspace.com"
-                  className="hover:text-foreground transition"
-                >
-                  hello@melaspace.com
-                </a>
+              <a href="https://t.me/DrSimaEsu" className="hover:text-foreground transition" target="_blank" rel="noopener noreferrer">
+                Join the Mela Space community
+              </a>
               </li>
               <li>
-                <a href="#" className="hover:text-foreground transition">
-                  Instagram
-                </a>
+              <a href="https://www.instagram.com/sima_esu" className="hover:text-foreground transition" target="_blank" rel="noopener noreferrer">
+                Instagram
+              </a>
               </li>
               <li>
-                <a href="#" className="hover:text-foreground transition">
-                  YouTube
-                </a>
+              <a href="https://www.youtube.com/@simretesubalew" className="hover:text-foreground transition" target="_blank" rel="noopener noreferrer">
+                YouTube
+              </a>
               </li>
               <li>
-                <a href="#" className="hover:text-foreground transition">
-                  TikTok
-                </a>
+              <a href="https://www.tiktok.com/@simretesubalew" className="hover:text-foreground transition" target="_blank" rel="noopener noreferrer">
+                TikTok
+              </a>
+              </li>
+              <li>
+              <a href="https://t.me/SimaEsubooks" className="hover:text-foreground transition" target="_blank" rel="noopener noreferrer">
+                Join Page Turners
+              </a>
+              </li>
+              <li>
+              <a href="https://t.me/PageTurnersBookClubEthiopia" className="hover:text-foreground transition" target="_blank" rel="noopener noreferrer">
+                Join Our book club
+              </a>
               </li>
             </ul>
           </div>

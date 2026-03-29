@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { cn } from "@/lib/utils"; 
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -18,6 +20,16 @@ export default function Navbar() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const navLinks = [
+    { href: "/about", label: "About" },
+    { href: "/blogs", label: "Blog" },
+    { href: "/resources", label: "Resources" },
+    { href: "/services", label: "Services" },
+    { href: "/contact", label: "Contact" },
+  ];
+
+  const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
 
   return (
     <header
@@ -68,48 +80,48 @@ export default function Navbar() {
           </span>
         </button>
 
-        {/* Nav Links */}
+        {/* Desktop Nav Links */}
         <nav className="hidden md:flex items-center gap-8 text-sm text-foreground/80">
-          <Link href="/about" className="hover:text-foreground transition">
-            About
-          </Link>
-          <Link href="/blogs" className="hover:text-foreground transition">
-            Blog
-          </Link>
-          <Link href="/resources" className="hover:text-foreground transition">
-            Resources
-          </Link>
-          <Link href="/services" className="hover:text-foreground transition">
-            Services
-          </Link>
-          <Link href="/contact" className="hover:text-foreground transition">
-            Contact
-          </Link>
+          {navLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={cn(
+                "transition border-b-2 pb-1",
+                isActive(link.href)
+                  ? "text-foreground border-foreground/70"
+                  : "border-transparent hover:text-foreground hover:border-foreground/20"
+              )}
+            >
+              {link.label}
+            </Link>
+          ))}
         </nav>
       </div>
 
+      {/* Mobile Nav Links */}
       <div
         className={cn(
           "md:hidden absolute left-0 top-full w-full overflow-hidden border-b border-border bg-background/95 backdrop-blur-md transition-all duration-300",
           mobileOpen ? "max-h-80 opacity-100" : "max-h-0 opacity-0"
         )}
       >
-        <nav className="mx-auto flex max-w-6xl flex-col gap-4 px-6 py-4 text-sm text-foreground/85">
-          <Link href="/about" className="hover:text-foreground transition" onClick={() => setMobileOpen(false)}>
-            About
-          </Link>
-          <Link href="/blogs" className="hover:text-foreground transition" onClick={() => setMobileOpen(false)}>
-            Blog
-          </Link>
-          <Link href="/resources" className="hover:text-foreground transition" onClick={() => setMobileOpen(false)}>
-            Resources
-          </Link>
-          <Link href="/services" className="hover:text-foreground transition" onClick={() => setMobileOpen(false)}>
-            Services
-          </Link>
-          <Link href="/contact" className="hover:text-foreground transition" onClick={() => setMobileOpen(false)}>
-            Contact
-          </Link>
+        <nav className="mx-auto flex max-w-6xl flex-col gap-4 px-6 py-4 text-sm text-foreground/80">
+          {navLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              onClick={() => setMobileOpen(false)}
+              className={cn(
+                "transition border-l-2 pl-2",
+                isActive(link.href)
+                  ? "text-foreground border-foreground/70"
+                  : "border-transparent hover:text-foreground hover:border-foreground/20"
+              )}
+            >
+              {link.label}
+            </Link>
+          ))}
         </nav>
       </div>
     </header>
