@@ -51,15 +51,6 @@ export default function RootLayout({
 			<body className={`${manrope.className} ${cormorant.variable} min-h-screen bg-background text-foreground`}>
 				<Toaster position="top-center" />
 				<div className="relative min-h-screen w-full bg-background">
-					<div
-						className="
-							app-grid-bg
-							absolute inset-0
-							bg-[linear-gradient(to_right,hsl(var(--border)/0.25)_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--border)/0.25)_1px,transparent_1px)]
-							bg-size-[18px_28px]
-							mask-[radial-gradient(ellipse_85%_55%_at_50%_0%,#000_65%,transparent_110%)]
-						"
-					/>
 					<div className="relative z-10">
 						{children}
 					</div>

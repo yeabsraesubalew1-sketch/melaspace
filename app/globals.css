@@ -180,7 +180,12 @@
   }
 
   .btn-secondary {
-    @apply bg-surface text-foreground border border-border hover:bg-surface-muted;
+    @apply text-foreground border border-border;
+    background-color: #f7eee2;
+  }
+
+  .btn-secondary:hover {
+    background-color: #f3e6d6;
   }
 
   .btn-ghost {
@@ -195,11 +200,12 @@
 }
 @layer components {
   .card {
-    @apply rounded-xl border border-border bg-surface-muted/95 shadow-sm backdrop-blur;
+    @apply rounded-xl border border-border shadow-sm backdrop-blur;
+    background-color: #f1e3d2;
   }
 
   .card-muted {
-    @apply bg-surface-muted;
+    background-color: #f1e3d2;
   }
 }
 
