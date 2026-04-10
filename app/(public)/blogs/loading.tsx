@@ -1,6 +1,6 @@
 export default function BlogsLoading() {
   return (
-    <main className="max-w-6xl mx-auto px-6 py-12 space-y-6 animate-pulse">
+    <main className="mx-auto max-w-6xl animate-pulse space-y-6 px-4 pb-10 pt-20 sm:px-6 sm:pb-12 sm:pt-24">
       <div className="space-y-3">
         <div className="h-10 w-40 rounded bg-surface-muted" />
         <div className="h-5 w-72 rounded bg-surface-muted" />

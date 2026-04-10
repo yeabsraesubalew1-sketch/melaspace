@@ -4,6 +4,25 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 
 import PageWrapper from "@/components/layout/PageWrapper";
+import { revealCard, revealItem, revealTransition, revealViewport } from "@/components/sections/motion";
+
+const highlights = [
+  {
+    title: "Clarity",
+    description: "Name what feels tangled and turn it into something workable.",
+    accent: "bg-foreground/75",
+  },
+  {
+    title: "Reflection",
+    description: "Slow down enough to notice the pattern beneath the noise.",
+    accent: "bg-accent/80",
+  },
+  {
+    title: "Action",
+    description: "Leave with a next step that feels practical and real.",
+    accent: "bg-mela-caramel-brown",
+  },
+];
 
 export default function HeroSection() {
   return (
@@ -13,11 +32,12 @@ export default function HeroSection() {
       <PageWrapper>
         <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
           <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.5 }}
-            transition={{ duration: 0.45 }}
-            className="text-center lg:text-left"
+            initial="hidden"
+            whileInView="visible"
+            variants={revealItem}
+            viewport={revealViewport}
+            transition={revealTransition}
+            className="motion-surface text-center lg:text-left"
           >
             <p className="text-sm uppercase tracking-[0.16em] text-foreground/50">
               Mela Space
@@ -47,19 +67,44 @@ export default function HeroSection() {
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, y: 16, scale: 0.98 }}
-            whileInView={{ opacity: 1, y: 0, scale: 1 }}
-            viewport={{ once: true, amount: 0.45 }}
-            transition={{ duration: 0.45, delay: 0.06 }}
-            className="card p-6 sm:p-7"
+            initial="hidden"
+            whileInView="visible"
+            variants={revealCard}
+            viewport={revealViewport}
+            transition={{ ...revealTransition, delay: 0.06 }}
+            className="motion-surface card overflow-hidden p-6 sm:p-7 lg:-translate-y-4 xl:-translate-y-6"
           >
-            <p className="text-sm font-medium text-foreground/60">What this space helps with</p>
+            <div className="flex items-start justify-between gap-5">
+              <div>
+                <p className="text-sm font-medium text-foreground/60">What this space helps with</p>
+                <p className="mt-2 max-w-sm text-sm leading-relaxed text-foreground/70">
+                  Simple, grounded support for people who want a clearer way
+                  to think, feel, and move forward.
+                </p>
+              </div>
 
-            <ul className="mt-4 space-y-3 text-sm sm:text-base text-foreground/80">
-              <li className="rounded-lg bg-background/70 px-3 py-2">Untangling overthinking patterns</li>
-              <li className="rounded-lg bg-background/70 px-3 py-2">Building practical self-awareness</li>
-              <li className="rounded-lg bg-background/70 px-3 py-2">Turning reflection into action</li>
-            </ul>
+              <svg
+                viewBox="0 0 88 88"
+                className="h-16 w-16 shrink-0 text-foreground/25"
+                fill="none"
+                aria-hidden="true"
+              >
+                <circle cx="44" cy="44" r="33" stroke="currentColor" strokeWidth="1.5" opacity="0.35" />
+                <circle cx="44" cy="44" r="18" stroke="currentColor" strokeWidth="1.5" opacity="0.8" />
+                <path d="M25 49c5-9 12-13 19-13s14 4 19 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                <path d="M44 16v10M72 44H62M44 72V62M16 44h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.6" />
+              </svg>
+            </div>
+
+            <div className="mt-5 grid gap-3 sm:grid-cols-3">
+              {highlights.map((item) => (
+                <div key={item.title} className="rounded-xl border border-border/70 bg-background/70 p-4">
+                  <div className={`h-2.5 w-2.5 rounded-full ${item.accent}`} />
+                  <h3 className="mt-3 text-sm font-semibold text-foreground">{item.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-foreground/70">{item.description}</p>
+                </div>
+              ))}
+            </div>
 
             <div className="mt-6 rounded-lg border border-border/70 bg-background/70 p-4 text-sm text-foreground/70">
               Start with inquiry if you want a tailored response.

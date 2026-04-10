@@ -2,6 +2,13 @@
 
 import PageWrapper from "@/components/layout/PageWrapper";
 import { motion } from "framer-motion";
+import {
+  revealItem,
+  revealStagger,
+  revealTransition,
+  revealTimelineCard,
+  revealViewport,
+} from "@/components/sections/motion";
 
 const resources = [
   {
@@ -34,22 +41,24 @@ export default function ResourcesSection() {
           
           {/* Heading */}
           <motion.h2
-            initial={{ opacity: 0, y: 15 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.45 }}
-            transition={{ duration: 0.4 }}
-            className="text-3xl sm:text-4xl font-semibold tracking-tight"
+            initial="hidden"
+            whileInView="visible"
+            variants={revealItem}
+            viewport={revealViewport}
+            transition={revealTransition}
+            className="motion-surface text-3xl sm:text-4xl font-semibold tracking-tight"
           >
             Tools for deeper self-work
           </motion.h2>
 
           {/* Subtext */}
           <motion.p
-            initial={{ opacity: 0, y: 15 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.45 }}
-            transition={{ duration: 0.38, delay: 0.06 }}
-            className="mt-4 text-base sm:text-lg text-foreground/70"
+            initial="hidden"
+            whileInView="visible"
+            variants={revealItem}
+            viewport={revealViewport}
+            transition={{ ...revealTransition, delay: 0.04 }}
+            className="motion-surface mt-4 text-base sm:text-lg text-foreground/70"
           >
             Practical tools designed to help you reflect, understand, and move
             forward at your own pace.
@@ -58,18 +67,19 @@ export default function ResourcesSection() {
 
         {/* Stacked Timeline */}
         <div className="mt-12">
-          <div className="relative border-l border-border pl-6 sm:pl-8 space-y-5">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            variants={revealStagger}
+            viewport={revealViewport}
+            className="relative border-l border-border pl-6 sm:pl-8 space-y-5"
+          >
             {resources.map((item, i) => (
               <motion.div
                 key={item.title}
-                initial={{ opacity: 0, x: 24, scale: 0.98 }}
-                whileInView={{ opacity: 1, x: 0, scale: 1 }}
-                viewport={{ once: true, amount: 0.2 }}
-                transition={{
-                  duration: 0.34,
-                  delay: i * 0.08,
-                }}
-                className="relative card p-5 transition duration-200 hover:-translate-y-1 hover:shadow-sm"
+                variants={revealTimelineCard}
+                transition={{ ...revealTransition, delay: i * 0.03 }}
+                className="motion-surface relative card p-5 transition duration-200 hover:-translate-y-1 hover:shadow-sm md:translate-x-0"
               >
                 <span className="absolute -left-8.5 sm:-left-10.5 top-6 h-3 w-3 rounded-full border border-border bg-background" />
 
@@ -84,7 +94,7 @@ export default function ResourcesSection() {
                 </p>
               </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
         {/* <p className="text-sm text-foreground/50 mt-6">
           Scroll →

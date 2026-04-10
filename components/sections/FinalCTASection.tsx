@@ -3,6 +3,7 @@
 import PageWrapper from "@/components/layout/PageWrapper";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { revealItem, revealTransition, revealViewport } from "@/components/sections/motion";
 
 export default function FinalCTASection() {
   return (
@@ -12,22 +13,24 @@ export default function FinalCTASection() {
           
           {/* Main Line */}
           <motion.h2
-            initial={{ opacity: 0, y: 15 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.4 }}
-            className="text-3xl sm:text-4xl font-semibold tracking-tight"
+            initial="hidden"
+            whileInView="visible"
+            variants={revealItem}
+            viewport={revealViewport}
+            transition={revealTransition}
+            className="motion-surface text-3xl sm:text-4xl font-semibold tracking-tight"
           >
             Ready for the next step?
           </motion.h2>
 
           {/* Supporting Text */}
           <motion.p
-            initial={{ opacity: 0, y: 15 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.35, delay: 0.05 }}
-            className="mt-5 text-base sm:text-lg text-primary-foreground/80 leading-relaxed"
+            initial="hidden"
+            whileInView="visible"
+            variants={revealItem}
+            viewport={revealViewport}
+            transition={{ ...revealTransition, delay: 0.04 }}
+            className="motion-surface mt-5 text-base sm:text-lg text-primary-foreground/80 leading-relaxed"
           >
             If you want direct support, start with inquiry.
             If you want updates when coaching opens, join the waitlist.
@@ -35,11 +38,12 @@ export default function FinalCTASection() {
 
           {/* CTAs */}
           <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.35, delay: 0.1 }}
-            className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4"
+            initial="hidden"
+            whileInView="visible"
+            variants={revealItem}
+            viewport={revealViewport}
+            transition={{ ...revealTransition, delay: 0.08 }}
+            className="motion-surface mt-10 flex flex-col sm:flex-row items-center justify-center gap-4"
           >
             <Link
               href="/contact#inquiry"

@@ -40,6 +40,8 @@ export function buildPageMetadata({
 	type = "website",
 	noIndex = false,
 }: BuildPageMetadataOptions): Metadata {
+	const imageUrl = absoluteUrl("/seo-card.svg");
+
 	return {
 		title,
 		description,
@@ -52,11 +54,20 @@ export function buildPageMetadata({
 			url: absoluteUrl(path),
 			siteName: SITE_NAME,
 			type,
+			images: [
+				{
+					url: imageUrl,
+					width: 1200,
+					height: 630,
+					alt: `${SITE_NAME} preview card`,
+				},
+			],
 		},
 		twitter: {
 			card: "summary_large_image",
 			title,
 			description,
+			images: [imageUrl],
 		},
 		robots: noIndex
 			? {

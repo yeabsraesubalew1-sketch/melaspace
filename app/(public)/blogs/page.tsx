@@ -140,7 +140,7 @@ export default async function BlogsPage({
   };
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-12">
+    <main className="mx-auto max-w-6xl px-4 pb-10 pt-20 sm:px-6 sm:pb-12 sm:pt-24">
 
       {/* Page header */}
       <div className="mb-8 sm:mb-10">

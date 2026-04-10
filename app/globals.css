@@ -270,6 +270,13 @@
 }
 
 @layer utilities {
+  .motion-surface {
+    will-change: transform, opacity;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    contain: paint;
+  }
+
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;

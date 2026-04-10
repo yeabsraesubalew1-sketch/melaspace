@@ -2,6 +2,13 @@
 
 import PageWrapper from "@/components/layout/PageWrapper";
 import { motion } from "framer-motion";
+import {
+  revealCard,
+  revealItem,
+  revealStagger,
+  revealTransition,
+  revealViewport,
+} from "@/components/sections/motion";
 
 const items = [
   "You feel stuck, but you can’t explain why.",
@@ -20,36 +27,37 @@ export default function WhoThisIsFor() {
           
           {/* Heading */}
           <motion.h2
-            initial={{ opacity: 0, y: 15 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.5 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
-            className="text-center text-3xl sm:text-4xl font-semibold tracking-tight"
+            initial="hidden"
+            whileInView="visible"
+            variants={revealItem}
+            viewport={revealViewport}
+            transition={revealTransition}
+            className="motion-surface text-center text-3xl sm:text-4xl font-semibold tracking-tight"
           >
             This space is for you if…
           </motion.h2>
 
           {/* Grid */}
-          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            variants={revealStagger}
+            viewport={revealViewport}
+            className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+          >
             {items.map((text, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, y: 30, scale: 0.98 }}
-                whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                viewport={{ once: true, amount: 0.25 }}
-                transition={{
-                  duration: 0.35,
-                  ease: "easeOut",
-                  delay: i * 0.05,
-                }}
-                className="card p-5 text-left transition duration-200 hover:-translate-y-1 hover:shadow-sm"
+                variants={revealCard}
+                transition={{ ...revealTransition, delay: i * 0.02 }}
+                className="motion-surface card p-5 text-left transition duration-200 hover:-translate-y-1 hover:shadow-sm"
               >
                 <p className="text-sm sm:text-base text-foreground/80 leading-relaxed">
                   {text}
                 </p>
               </motion.div>
             ))}
-          </div>
+          </motion.div>
 
         </div>
       </PageWrapper>

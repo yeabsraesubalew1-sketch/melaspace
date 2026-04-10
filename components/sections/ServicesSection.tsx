@@ -3,6 +3,13 @@
 import PageWrapper from "@/components/layout/PageWrapper";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import {
+  revealCard,
+  revealItem,
+  revealStagger,
+  revealTransition,
+  revealViewport,
+} from "@/components/sections/motion";
 
 const services = [
   {
@@ -28,11 +35,12 @@ export default function ServicesSection() {
       <PageWrapper>
         <div className="mx-auto max-w-6xl lg:grid lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.35fr)] lg:gap-10 lg:items-start">
           <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.5 }}
-            transition={{ duration: 0.4 }}
-            className="text-center lg:text-left"
+            initial="hidden"
+            whileInView="visible"
+            variants={revealItem}
+            viewport={revealViewport}
+            transition={revealTransition}
+            className="motion-surface text-center lg:text-left"
           >
             <p className="text-sm uppercase tracking-[0.16em] text-foreground/50">Services</p>
             <h2 className="mt-3 text-3xl sm:text-4xl font-semibold tracking-tight">
@@ -54,18 +62,19 @@ export default function ServicesSection() {
             </div>
           </motion.div>
 
-          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:mt-0 lg:grid-cols-1">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            variants={revealStagger}
+            viewport={revealViewport}
+            className="mt-10 grid gap-5 sm:grid-cols-2 lg:mt-0 lg:grid-cols-1"
+          >
             {services.map((service, i) => (
               <motion.div
                 key={service.title}
-                initial={{ opacity: 0, y: 30, scale: 0.98 }}
-                whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                viewport={{ once: true, amount: 0.25 }}
-                transition={{
-                  duration: 0.35,
-                  delay: i * 0.06,
-                }}
-                className="card card-muted p-6 text-left transition duration-200 hover:-translate-y-1 hover:shadow-sm"
+                variants={revealCard}
+                transition={{ ...revealTransition, delay: i * 0.02 }}
+                className="motion-surface card card-muted p-6 text-left transition duration-200 hover:-translate-y-1 hover:shadow-sm"
               >
                 <h3 className="text-lg font-semibold">
                   {service.title}
@@ -76,7 +85,7 @@ export default function ServicesSection() {
                 </p>
               </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </PageWrapper>
     </section>

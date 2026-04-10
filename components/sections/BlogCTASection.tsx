@@ -3,6 +3,7 @@
 import PageWrapper from "@/components/layout/PageWrapper";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { revealItem, revealTransition, revealViewport } from "@/components/sections/motion";
 
 export default function BlogCTASection() {
   return (
@@ -12,22 +13,24 @@ export default function BlogCTASection() {
           
           {/* Heading */}
           <motion.h2
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.4 }}
-            className="text-3xl sm:text-4xl font-semibold tracking-tight"
+            initial="hidden"
+            whileInView="visible"
+            variants={revealItem}
+            viewport={revealViewport}
+            transition={revealTransition}
+            className="motion-surface text-3xl sm:text-4xl font-semibold tracking-tight"
           >
             Go deeper than surface-level advice
           </motion.h2>
 
           {/* Text */}
           <motion.p
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.35, delay: 0.05 }}
-            className="mt-5 text-base sm:text-lg text-foreground/70 leading-relaxed"
+            initial="hidden"
+            whileInView="visible"
+            variants={revealItem}
+            viewport={revealViewport}
+            transition={{ ...revealTransition, delay: 0.04 }}
+            className="motion-surface mt-5 text-base sm:text-lg text-foreground/70 leading-relaxed"
           >
             Explore ideas, reflections, and frameworks designed to help you
             understand yourself, not just temporarily feel better.
@@ -35,11 +38,12 @@ export default function BlogCTASection() {
 
           {/* CTA */}
           <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.35, delay: 0.1 }}
-            className="mt-8"
+            initial="hidden"
+            whileInView="visible"
+            variants={revealItem}
+            viewport={revealViewport}
+            transition={{ ...revealTransition, delay: 0.08 }}
+            className="motion-surface mt-8"
           >
             <Link
               href="/blogs"

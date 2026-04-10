@@ -71,12 +71,21 @@ export async function generateMetadata({
       publishedTime: blog.publishedAt,
       section: "Blog",
       tags: blog.categories?.map((cat) => cat.name) ?? [],
+      images: [
+        {
+          url: absoluteUrl(`/blogs/${blog.slug}/opengraph-image`),
+          width: 1200,
+          height: 630,
+          alt: `${blog.title} | ${seoConfig.siteName}`,
+        },
+      ],
     },
 
     twitter: {
       card: "summary_large_image",
       title: `${blog.title} | ${seoConfig.siteName}`,
       description: blog.excerpt,
+      images: [absoluteUrl(`/blogs/${blog.slug}/opengraph-image`)],
     },
 
     keywords: blog.categories?.map((cat) => cat.name) ?? [],

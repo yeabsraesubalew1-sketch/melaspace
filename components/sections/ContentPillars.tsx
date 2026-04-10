@@ -3,6 +3,13 @@
 import PageWrapper from "@/components/layout/PageWrapper";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import {
+  revealCard,
+  revealItem,
+  revealStagger,
+  revealTransition,
+  revealViewport,
+} from "@/components/sections/motion";
 
 const categories = [
   {
@@ -42,32 +49,35 @@ export default function ContentPillars() {
             </p>
 
             <motion.h2
-              initial={{ opacity: 0, y: 15 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.45 }}
-              transition={{ duration: 0.4 }}
-              className="mt-3 text-3xl sm:text-4xl font-semibold tracking-tight"
+              initial="hidden"
+              whileInView="visible"
+              variants={revealItem}
+              viewport={revealViewport}
+              transition={revealTransition}
+              className="motion-surface mt-3 text-3xl sm:text-4xl font-semibold tracking-tight"
             >
               Explore what speaks to you
             </motion.h2>
 
             <motion.p
-              initial={{ opacity: 0, y: 15 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.45 }}
-              transition={{ duration: 0.38, delay: 0.06 }}
-              className="mt-4 text-base sm:text-lg text-foreground/70"
+              initial="hidden"
+              whileInView="visible"
+              variants={revealItem}
+              viewport={revealViewport}
+              transition={{ ...revealTransition, delay: 0.04 }}
+              className="motion-surface mt-4 text-base sm:text-lg text-foreground/70"
             >
               Each category supports a different part of your growth process,
               from practical change to deeper reflection.
             </motion.p>
 
             <motion.div
-              initial={{ opacity: 0, y: 15 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.45 }}
-              transition={{ duration: 0.38, delay: 0.1 }}
-              className="mt-7"
+              initial="hidden"
+              whileInView="visible"
+              variants={revealItem}
+              viewport={revealViewport}
+              transition={{ ...revealTransition, delay: 0.06 }}
+              className="motion-surface mt-7"
             >
               <Link href="/contact#inquiry" className="btn btn-secondary px-6 py-2.5">
                 Ask a question
@@ -75,17 +85,19 @@ export default function ContentPillars() {
             </motion.div>
           </div>
 
-          <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:mt-0">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            variants={revealStagger}
+            viewport={revealViewport}
+            className="mt-12 grid gap-5 sm:grid-cols-2 lg:mt-0"
+          >
             {categories.map((cat, i) => (
               <motion.div
                 key={cat.slug}
-                initial={{ opacity: 0, y: 30, scale: 0.98 }}
-                whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                viewport={{ once: true, amount: 0.2 }}
-                transition={{
-                  duration: 0.35,
-                  delay: i * 0.06,
-                }}
+                variants={revealCard}
+                transition={{ ...revealTransition, delay: i * 0.02 }}
+                className="motion-surface"
               >
                 <Link
                   href={`/blogs?category=${cat.slug}`}
@@ -99,7 +111,7 @@ export default function ContentPillars() {
                 </Link>
               </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </PageWrapper>
     </section>
