@@ -50,12 +50,12 @@ export async function generateMetadata({
 
   if (!blog) {
     return {
-      title: `Blog not found | ${seoConfig.siteName}`,
+      title: "Blog not found",
     };
   }
 
   return {
-    title: `${blog.title} | ${seoConfig.siteName}`,
+    title: blog.title,
     description: blog.excerpt,
 
     alternates: {
