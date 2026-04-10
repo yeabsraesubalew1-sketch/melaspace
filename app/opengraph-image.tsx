@@ -53,7 +53,7 @@ export default function Image() {
 							</div>
 
 							<div style={{ display: "flex", fontFamily: "Georgia, 'Times New Roman', serif", fontSize: 74, fontWeight: 700, lineHeight: 1.04, letterSpacing: -1.6, maxWidth: 740 }}>
-								Clarity-led coaching, reflection, and growth.
+								A step towards clarity.
 							</div>
 						</div>
 
@@ -67,20 +67,21 @@ export default function Image() {
 					<div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 40 }}>
 						<div style={{ display: "flex", flexDirection: "column", gap: 18, maxWidth: 900 }}>
 							<div style={{ display: "flex", fontSize: 28, lineHeight: 1.45, opacity: 0.86 }}>
-								A calm space for people who want practical insight, not noise.
+								Coaching and reflection tools
+								for real progress.
 							</div>
 
 							<div style={{ display: "flex", alignItems: "center", gap: 14, fontSize: 22, opacity: 0.72 }}>
 								<span style={{ width: 48, height: 2, background: "#5a4338", borderRadius: 999 }} />
-								Read, reflect, and move forward.
+								Read, reflect, and take your next clear step.
 							</div>
 						</div>
 
 						<div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "flex-end" }}>
-							<div style={{ display: "flex", gap: 12 }}>
-								<div style={{ display: "flex", padding: "12px 18px", borderRadius: 999, background: "rgba(90,67,56,0.08)", border: "1px solid rgba(90,67,56,0.12)", fontSize: 22, fontWeight: 600 }}>Reflect</div>
-								<div style={{ display: "flex", padding: "12px 18px", borderRadius: 999, background: "rgba(141,104,88,0.16)", border: "1px solid rgba(90,67,56,0.12)", fontSize: 22, fontWeight: 600 }}>Clarify</div>
-								<div style={{ display: "flex", padding: "12px 18px", borderRadius: 999, background: "rgba(248,243,237,0.9)", border: "1px solid rgba(90,67,56,0.12)", fontSize: 22, fontWeight: 600 }}>Move</div>
+							<div style={{ display: "flex", flexWrap: "wrap", justifyContent: "flex-end", gap: 10, maxWidth: 380 }}>
+								<div style={{ display: "flex", padding: "10px 16px", borderRadius: 999, background: "rgba(90,67,56,0.08)", border: "1px solid rgba(90,67,56,0.12)", fontSize: 20, fontWeight: 600 }}>Reset</div>
+								<div style={{ display: "flex", padding: "10px 16px", borderRadius: 999, background: "rgba(141,104,88,0.16)", border: "1px solid rgba(90,67,56,0.12)", fontSize: 20, fontWeight: 600 }}>Reframe</div>
+								<div style={{ display: "flex", padding: "10px 16px", borderRadius: 999, background: "rgba(248,243,237,0.9)", border: "1px solid rgba(90,67,56,0.12)", fontSize: 20, fontWeight: 600 }}>Act</div>
 							</div>
 						</div>
 					</div>
