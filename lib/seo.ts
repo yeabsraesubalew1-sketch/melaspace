@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 const SITE_NAME = "Mela Space";
 const DEFAULT_DESCRIPTION =
 	"Mela Space helps creators and founders grow with clarity through practical strategy, content systems, and coaching.";
+export const OG_IMAGE_VERSION = "2026-04-11-1";
 
 export function getBaseUrl() {
 	const envBaseUrl =
@@ -40,7 +41,7 @@ export function buildPageMetadata({
 	type = "website",
 	noIndex = false,
 }: BuildPageMetadataOptions): Metadata {
-	const imageUrl = absoluteUrl("/opengraph-image");
+	const imageUrl = absoluteUrl(`/opengraph-image?v=${OG_IMAGE_VERSION}`);
 
 	return {
 		title,

@@ -5,7 +5,7 @@ import TableOfContents from "@/components/blog/TableOfContents";
 import type { EditorContent } from "@/types/editor";
 import type { Metadata } from "next";
 import { processBlogContent } from "@/lib/blog-utils";
-import { absoluteUrl, seoConfig } from "@/lib/seo";
+import { OG_IMAGE_VERSION, absoluteUrl, seoConfig } from "@/lib/seo";
 import { cache } from "react";
 
 function getBaseUrl() {
@@ -73,7 +73,7 @@ export async function generateMetadata({
       tags: blog.categories?.map((cat) => cat.name) ?? [],
       images: [
         {
-          url: absoluteUrl(`/api/og/blog?slug=${encodeURIComponent(blog.slug)}`),
+          url: absoluteUrl(`/api/og/blog?slug=${encodeURIComponent(blog.slug)}&v=${OG_IMAGE_VERSION}`),
           width: 1200,
           height: 630,
           alt: `${blog.title} | ${seoConfig.siteName}`,
@@ -85,7 +85,7 @@ export async function generateMetadata({
       card: "summary_large_image",
       title: `${blog.title} | ${seoConfig.siteName}`,
       description: blog.excerpt,
-      images: [absoluteUrl(`/api/og/blog?slug=${encodeURIComponent(blog.slug)}`)],
+      images: [absoluteUrl(`/api/og/blog?slug=${encodeURIComponent(blog.slug)}&v=${OG_IMAGE_VERSION}`)],
     },
 
     keywords: blog.categories?.map((cat) => cat.name) ?? [],
