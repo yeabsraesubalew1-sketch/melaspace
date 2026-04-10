@@ -73,7 +73,7 @@ export async function generateMetadata({
       tags: blog.categories?.map((cat) => cat.name) ?? [],
       images: [
         {
-          url: absoluteUrl(`/blogs/${blog.slug}/opengraph-image`),
+          url: absoluteUrl(`/api/og/blog?slug=${encodeURIComponent(blog.slug)}`),
           width: 1200,
           height: 630,
           alt: `${blog.title} | ${seoConfig.siteName}`,
@@ -85,7 +85,7 @@ export async function generateMetadata({
       card: "summary_large_image",
       title: `${blog.title} | ${seoConfig.siteName}`,
       description: blog.excerpt,
-      images: [absoluteUrl(`/blogs/${blog.slug}/opengraph-image`)],
+      images: [absoluteUrl(`/api/og/blog?slug=${encodeURIComponent(blog.slug)}`)],
     },
 
     keywords: blog.categories?.map((cat) => cat.name) ?? [],

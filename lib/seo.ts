@@ -40,7 +40,7 @@ export function buildPageMetadata({
 	type = "website",
 	noIndex = false,
 }: BuildPageMetadataOptions): Metadata {
-	const imageUrl = absoluteUrl("/seo-card.svg");
+	const imageUrl = absoluteUrl("/opengraph-image");
 
 	return {
 		title,
