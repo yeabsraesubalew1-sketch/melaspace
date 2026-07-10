@@ -1,11 +1,18 @@
 import PageWrapper from "@/components/layout/PageWrapper";
 import Link from "next/link";
-import { buildPageMetadata } from "@/lib/seo";
+import { buildPageMetadata, breadcrumbSchema } from "@/lib/seo";
 
 export const metadata = buildPageMetadata({
   title: "Resources",
+  description:
+    "Discover Mela Space tools and templates for reflection, journaling, emotional awareness, and sustainable progress.",
   path: "/resources",
 });
+
+const breadcrumbJsonLd = breadcrumbSchema([
+  { name: "Home", path: "/" },
+  { name: "Resources", path: "/resources" },
+]);
 
 const resources = [
   "Journaling Prompts for Self-Discovery",
@@ -21,6 +28,10 @@ const resources = [
 export default function ResourcesPage() {
   return (
     <PageWrapper>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       <div className="max-w-4xl mx-auto space-y-12 pt-24 sm:pt-28 pb-16">
 
         <section className="text-center space-y-4">

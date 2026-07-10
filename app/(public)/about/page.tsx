@@ -1,14 +1,25 @@
 import PageWrapper from "@/components/layout/PageWrapper";
-import { buildPageMetadata } from "@/lib/seo";
+import { buildPageMetadata, breadcrumbSchema } from "@/lib/seo";
 
 export const metadata = buildPageMetadata({
   title: "About",
+  description:
+    "Meet Mela Space: a calm, intentional coaching space built around clarity, resilience, and creative growth.",
   path: "/about",
 });
+
+const breadcrumbJsonLd = breadcrumbSchema([
+  { name: "Home", path: "/" },
+  { name: "About", path: "/about" },
+]);
 
 export default function AboutPage() {
   return (
     <PageWrapper>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       <div className="max-w-3xl mx-auto space-y-16 pt-24 sm:pt-28">
 
         {/* Hero */}

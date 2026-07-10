@@ -5,7 +5,7 @@ import Pagination from "@/components/blog/Pagination";
 import CategoryQueryGuard from "@/components/blog/CategoryQueryGuard";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { buildPageMetadata } from "@/lib/seo";
+import { buildPageMetadata, breadcrumbSchema } from "@/lib/seo";
 
 function getBaseUrl() {
   const envBaseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? process.env.NEXTAUTH_URL;
@@ -77,6 +77,11 @@ export async function generateMetadata({
   });
 }
 
+const blogsBreadcrumbJsonLd = breadcrumbSchema([
+  { name: "Home", path: "/" },
+  { name: "Blog", path: "/blogs" },
+]);
+
 async function fetchBlogs(params: string) {
   const res = await fetch(`${getBaseUrl()}/api/blogs?${params}`, {
         next: { revalidate: 60 },
@@ -141,6 +146,10 @@ export default async function BlogsPage({
 
   return (
     <main className="mx-auto max-w-6xl px-4 pb-10 pt-20 sm:px-6 sm:pb-12 sm:pt-24">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(blogsBreadcrumbJsonLd) }}
+      />
 
       {/* Page header */}
       <div className="mb-8 sm:mb-10">

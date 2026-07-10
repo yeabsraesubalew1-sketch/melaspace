@@ -5,7 +5,7 @@ import TableOfContents from "@/components/blog/TableOfContents";
 import type { EditorContent } from "@/types/editor";
 import type { Metadata } from "next";
 import { processBlogContent } from "@/lib/blog-utils";
-import { OG_IMAGE_VERSION, absoluteUrl, seoConfig } from "@/lib/seo";
+import { OG_IMAGE_VERSION, absoluteUrl, seoConfig, breadcrumbSchema } from "@/lib/seo";
 import { cache } from "react";
 
 function getBaseUrl() {
@@ -92,6 +92,11 @@ export async function generateMetadata({
   };
 }
 
+const blogBreadcrumbJsonLd = breadcrumbSchema([
+  { name: "Home", path: "/" },
+  { name: "Blog", path: "/blogs" },
+]);
+
 
 const getBlog = cache(async (slug: string): Promise<Blog | null> => {
   try {
@@ -156,6 +161,10 @@ export default async function BlogPage({ params }: Props) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(blogBreadcrumbJsonLd) }}
       />
       <div className="mx-auto max-w-6xl">
         <div className="flex flex-col gap-10 lg:flex-row lg:items-start">

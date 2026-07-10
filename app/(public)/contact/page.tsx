@@ -1,16 +1,27 @@
 import PageWrapper from "@/components/layout/PageWrapper";
 import InquiryForm from "@/components/forms/InquiryForm";
 import WaitlistForm from "@/components/forms/WaitlistForm";
-import { buildPageMetadata } from "@/lib/seo";
+import { buildPageMetadata, breadcrumbSchema } from "@/lib/seo";
 
 export const metadata = buildPageMetadata({
   title: "Contact",
+  description:
+    "Reach out to Mela Space for coaching inquiries, collaborations, or to join the waitlist for personalized support.",
   path: "/contact",
 });
+
+const breadcrumbJsonLd = breadcrumbSchema([
+  { name: "Home", path: "/" },
+  { name: "Contact", path: "/contact" },
+]);
 
 export default function ContactPage() {
   return (
     <PageWrapper>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       <div className="max-w-2xl mx-auto space-y-14 pt-24 sm:pt-28 pb-16">
 
         {/* Header */}
