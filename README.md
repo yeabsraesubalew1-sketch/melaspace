@@ -87,6 +87,8 @@ Open `http://localhost:3000`.
 - `npm run start` run production server locally
 - `npm run lint` run ESLint
 - `npm run seed:blogs` seed sample blog data
+- `npm run seed:blogs -- --format=markdown` seed using markdown-style content blocks
+- `npm run seed:blogs -- --format=editorjs` seed using prebuilt Editor.js block data
 
 ## Admin Access Setup
 
