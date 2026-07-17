@@ -36,7 +36,7 @@ export default function TableOfContents({ toc }: Props) {
           >
             <a
               href={`#${item.id}`}
-              className="block truncate hover:underline opacity-80"
+              className="block break-words whitespace-normal leading-snug hover:underline opacity-80"
             >
               {item.text}
             </a>

@@ -11,6 +11,24 @@ interface Params {
   id: string;
 }
 
+function getUserFacingError(error: unknown) {
+  if (error instanceof Error) {
+    const message = error.message.toLowerCase();
+
+    if (
+      /mongo|mongoose|serverselection|topology|ssl|tls|econn|enotfound|connect/.test(
+        message
+      )
+    ) {
+      return "Database connection failed. Please verify your MongoDB configuration and try again.";
+    }
+
+    return error.message;
+  }
+
+  return "Internal server error";
+}
+
 //
 // GET /api/admin/blogs/[id]
 // Fetch single blog (draft or published)
@@ -58,7 +76,7 @@ export async function GET(
     console.error("GET /api/admin/blogs/[id] error", error);
 
     return NextResponse.json<ApiResponse<null>>(
-      { success: false, data: null, error: "Internal server error" },
+      { success: false, data: null, error: getUserFacingError(error) },
       { status: 500 }
     );
   }
@@ -203,7 +221,7 @@ export async function PUT(
     console.error("PUT /api/admin/blogs/[id] error", error);
 
     return NextResponse.json<ApiResponse<null>>(
-      { success: false, data: null, error: "Internal server error" },
+      { success: false, data: null, error: getUserFacingError(error) },
       { status: 500 }
     );
   }
@@ -254,7 +272,7 @@ export async function DELETE(
     console.error("DELETE /api/admin/blogs/[id] error", error);
 
     return NextResponse.json<ApiResponse<null>>(
-      { success: false, data: null, error: "Internal server error" },
+      { success: false, data: null, error: getUserFacingError(error) },
       { status: 500 }
     );
   }
