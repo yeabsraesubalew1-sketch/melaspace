@@ -10,15 +10,20 @@ function basicSlugify(text: string) {
 }
 
 export async function generateUniqueSlug(title: string) {
-  const baseSlug = basicSlugify(title);
+  const baseSlug = basicSlugify(title) || "blog";
 
   let slug = baseSlug;
   let counter = 1;
 
-  while (await Blog.exists({ slug })) {
-    slug = `${baseSlug}-${counter}`;
-    counter++;
-  }
+  try {
+    while (await Blog.exists({ slug })) {
+      slug = `${baseSlug}-${counter}`;
+      counter++;
+    }
 
-  return slug;
+    return slug;
+  } catch (error) {
+    console.warn("Falling back to a non-DB slug because MongoDB is unavailable", error);
+    return `${baseSlug}-${Date.now().toString(36)}`;
+  }
 }

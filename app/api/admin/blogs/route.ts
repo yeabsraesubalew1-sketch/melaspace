@@ -10,6 +10,24 @@ import type { ApiResponse, BlogPreview } from "@/types/api";
 import { generateUniqueSlug } from "@/lib/slugify";
 import { generateExcerpt } from "@/lib/generateExcerpt";
 
+function getUserFacingError(error: unknown) {
+  if (error instanceof Error) {
+    const message = error.message.toLowerCase();
+
+    if (
+      /mongo|mongoose|serverselection|topology|ssl|tls|econn|enotfound|connect/.test(
+        message
+      )
+    ) {
+      return "Database connection failed. Please verify your MongoDB configuration and try again.";
+    }
+
+    return error.message;
+  }
+
+  return "Internal server error";
+}
+
 //
 // GET /api/admin/blogs
 //
@@ -143,7 +161,7 @@ export async function GET(req: Request) {
     console.error("GET /api/admin/blogs error", error);
 
     return NextResponse.json<ApiResponse<null>>(
-      { success: false, data: null, error: "Internal server error" },
+      { success: false, data: null, error: getUserFacingError(error) },
       { status: 500 }
     );
   }
@@ -257,7 +275,7 @@ export async function POST(req: Request) {
     console.error("POST /api/admin/blogs error", error);
 
     return NextResponse.json<ApiResponse<null>>(
-      { success: false, data: null, error: "Internal server error" },
+      { success: false, data: null, error: getUserFacingError(error) },
       { status: 500 }
     );
   }

@@ -1,5 +1,6 @@
 import type { HeaderBlock as HeaderBlockType } from "../types";
 import type { ElementType } from "react";
+import { decodeHtmlEntities } from "@/lib/blog-utils";
 
 interface Props {
   block: HeaderBlockType;
@@ -23,9 +24,10 @@ export default function HeaderBlock({ block, id }: Props) {
   } as const;
 
   return (
-    <Tag id={resolvedId}
+    <Tag
+      id={resolvedId}
       className={`${sizeMap[safeLevel]} font-semibold mt-10 mb-4`}
-      dangerouslySetInnerHTML={{ __html: text }}
+      dangerouslySetInnerHTML={{ __html: decodeHtmlEntities(text) }}
     />
   );
 }

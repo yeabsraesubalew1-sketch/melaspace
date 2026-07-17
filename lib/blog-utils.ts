@@ -21,8 +21,23 @@ export function getCollisionSafeSlug(
   return `${baseSlug}-${nextCount}`;
 }
 
+export function decodeHtmlEntities(text: string) {
+  return text
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&#160;/gi, " ")
+    .replace(/&#xA0;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/&#x27;/gi, "'")
+    .replace(/\u00a0/g, " ")
+    .replace(/\u202f/g, " ");
+}
+
 function stripHtml(text: string) {
-  return text.replace(/<\/?[^>]+(>|$)/g, "");
+  return decodeHtmlEntities(text).replace(/<\/?[^>]+(>|$)/g, "");
 }
 
 function sanitizeHeadingText(text: string) {
@@ -152,9 +167,8 @@ export function processBlogContent(content: EditorContent) {
 }
 
 export function slugify(text: string) {
-  return text
+  return stripHtml(text)
     .toLowerCase()
-    .replace(/<\/?[^>]+(>|$)/g, "")
     .replace(/[^\w\s-]/g, "")
     .trim()
     .replace(/\s+/g, "-");
