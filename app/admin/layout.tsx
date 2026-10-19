@@ -11,6 +11,8 @@ export const metadata: Metadata = {
   },
 };
 
+const ADMIN_ROLES = ["root_admin", "super_admin", "manager", "author"];
+
 export default async function AdminLayout({
   children,
 }: {
@@ -18,7 +20,12 @@ export default async function AdminLayout({
 }) {
   const session = await getServerSession(authOptions);
 
-  if (!session || !session.user?.email) {
+  if (
+    !session ||
+    !session.user?.email ||
+    !ADMIN_ROLES.includes(session.user.role) ||
+    session.user.status === "kicked"
+  ) {
     redirect("/login");
   }
 

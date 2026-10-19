@@ -1,6 +1,7 @@
 import mongoose, { Schema, Model } from "mongoose";
 import type { EditorContent } from "@/types/editor";
 import "@/models/Category";
+import "@/models/User";
 
 export interface BlogDocument extends mongoose.Document {
   title: string;
@@ -10,6 +11,12 @@ export interface BlogDocument extends mongoose.Document {
   categories: mongoose.Types.ObjectId[];
   status: "draft" | "published";
   publishedAt?: Date;
+  author?: mongoose.Types.ObjectId;
+  authorName?: string;
+  isAnonymous?: boolean;
+  lastEditedBy?: mongoose.Types.ObjectId;
+  isPinned?: boolean;
+  views?: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -41,15 +48,49 @@ const BlogSchema = new Schema<BlogDocument>(
     },
 
     categories: {
-  type: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: "Category",
+      type: [
+        {
+          type: Schema.Types.ObjectId,
+          ref: "Category",
+        },
+      ],
+      default: undefined,
     },
-  ],
-  default: undefined,
-},
 
+    author: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      index: true,
+    },
+
+    authorName: {
+      type: String,
+      default: "Mela Team",
+      trim: true,
+    },
+
+    isAnonymous: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+
+    lastEditedBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
+
+    isPinned: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+
+    views: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
 
     status: {
       type: String,
@@ -69,6 +110,11 @@ const BlogSchema = new Schema<BlogDocument>(
 
 
 BlogSchema.pre("save", async function () {
+  // Pinned blogs must be published; drafts are automatically unpinned
+  if (this.status !== "published") {
+    this.isPinned = false;
+  }
+
   if (!this.categories || this.categories.length === 0) {
     const Category = mongoose.models.Category;
     if (!Category) return;
@@ -85,6 +131,10 @@ BlogSchema.pre("save", async function () {
 
 
 
+
+if (process.env.NODE_ENV !== "production") {
+  delete (mongoose.models as Record<string, unknown>).Blog;
+}
 
 // Prevent model overwrite on hot reload
 export const Blog: Model<BlogDocument> =

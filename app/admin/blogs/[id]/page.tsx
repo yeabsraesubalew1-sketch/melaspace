@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { Types } from "mongoose";
 import BlogEditor from "@/components/admin/blog-editor";
@@ -31,7 +32,9 @@ export default async function EditBlogPage({
         </p>
       </div>
 
-      <BlogEditor mode="edit" blogId={id} />
+      <Suspense fallback={<div className="h-96 rounded-xl border border-border bg-surface-muted animate-pulse" />}>
+        <BlogEditor mode="edit" blogId={id} />
+      </Suspense>
 
     </div>
   );

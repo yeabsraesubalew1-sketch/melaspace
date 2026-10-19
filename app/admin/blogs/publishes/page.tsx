@@ -16,6 +16,11 @@ interface BlogLean {
   categories: { _id: unknown; name: string; slug: string }[];
   status: "draft" | "published";
   publishedAt?: Date;
+  isPinned?: boolean;
+  views?: number;
+  author?: { toString(): string };
+  authorName?: string;
+  isAnonymous?: boolean;
 }
 
 interface CategoryOption {
@@ -42,6 +47,11 @@ function mapPreview(blog: BlogLean): BlogPreview {
     })),
     status: blog.status,
     publishedAt: blog.publishedAt?.toISOString(),
+    isPinned: Boolean(blog.isPinned),
+    views: blog.views ?? 0,
+    authorId: blog.author ? blog.author.toString() : undefined,
+    authorName: blog.authorName || "Mela Team",
+    isAnonymous: Boolean(blog.isAnonymous),
   };
 }
 

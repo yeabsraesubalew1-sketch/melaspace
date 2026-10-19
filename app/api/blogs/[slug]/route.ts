@@ -1,36 +1,27 @@
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { Blog } from "@/models/Blog";
 import "@/models/Category";
-import type { ApiResponse } from "@/types/api";
-import type { EditorContent } from "@/types/editor";
+import "@/models/User";
+import Bookmark from "@/models/Bookmark";
+import type { ApiResponse, BlogFull } from "@/types/api";
 
 interface Params {
   slug: string;
-}
-
-interface PopulatedCategory {
-  _id: string;
-  name: string;
-  slug: string;
-}
-
-interface PublicBlogFull {
-  id: string;
-  title: string;
-  slug: string;
-  excerpt: string;
-  categories: PopulatedCategory[];
-  content: EditorContent;
-  publishedAt?: string;
-  createdAt: string;
-  updatedAt: string;
 }
 
 interface PopulatedCategoryDoc {
   _id: { toString(): string };
   name: string;
   slug: string;
+}
+
+interface PopulatedAuthorDoc {
+  _id: { toString(): string };
+  name: string;
+  avatar?: string;
 }
 
 export async function GET(
@@ -47,6 +38,7 @@ export async function GET(
       status: "published",
     })
       .populate("categories", "_id name slug")
+      .populate("author", "_id name avatar role")
       .lean();
 
     if (!blog) {
@@ -60,7 +52,29 @@ export async function GET(
       );
     }
 
-    const response: PublicBlogFull = {
+    // Check if user has bookmarked this blog
+    let isBookmarked = false;
+    try {
+      const session = await getServerSession(authOptions);
+      if (session?.user?.id) {
+        const found = await Bookmark.exists({
+          userId: session.user.id,
+          blogId: blog._id,
+        });
+        isBookmarked = Boolean(found);
+      }
+    } catch {
+      // Ignore session errors for public reading
+    }
+
+    const populatedAuthor = blog.author as unknown as (PopulatedAuthorDoc & { role?: string }) | null;
+    const isAnonymous = Boolean(blog.isAnonymous);
+    const isTeamAuthor = populatedAuthor && ["root_admin", "super_admin", "manager"].includes(populatedAuthor.role || "");
+    const authorName = isAnonymous
+      ? (blog.authorName === "Anonymous" || !isTeamAuthor ? "Anonymous" : "Mela Team")
+      : (blog.authorName || populatedAuthor?.name || "Mela Team");
+
+    const response: BlogFull = {
       id: blog._id.toString(),
       title: blog.title,
       slug: blog.slug,
@@ -74,9 +88,23 @@ export async function GET(
       publishedAt: blog.publishedAt?.toISOString(),
       createdAt: blog.createdAt.toISOString(),
       updatedAt: blog.updatedAt.toISOString(),
+      isPinned: Boolean(blog.isPinned),
+      views: blog.views ?? 0,
+      authorName,
+      author: isAnonymous || !populatedAuthor
+        ? {
+            name: authorName,
+          }
+        : {
+            id: populatedAuthor._id.toString(),
+            name: populatedAuthor.name,
+            avatar: populatedAuthor.avatar,
+          },
+      isAnonymous,
+      isBookmarked,
     };
 
-    return NextResponse.json<ApiResponse<PublicBlogFull>>({
+    return NextResponse.json<ApiResponse<BlogFull>>({
       success: true,
       data: response,
     });

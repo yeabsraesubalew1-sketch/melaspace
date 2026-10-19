@@ -1,9 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 import LogoutButton from "@/components/LogoutButton";
+import DefaultAvatar from "@/components/ui/DefaultAvatar";
+import ProfileModal from "@/components/profile/ProfileModal";
 
 interface NavItem {
   label: string;
@@ -12,7 +15,13 @@ interface NavItem {
   exact?: boolean;
 }
 
-const navSections: Array<{ title?: string; items: NavItem[] }> = [
+interface NavSection {
+  title?: string;
+  items: NavItem[];
+  requiredRoles?: string[];
+}
+
+const rawNavSections: NavSection[] = [
   {
     items: [
       {
@@ -44,10 +53,16 @@ const navSections: Array<{ title?: string; items: NavItem[] }> = [
         href: "/admin/blogs/publishes",
         indent: true,
       },
+      {
+        label: "Proposals",
+        href: "/admin/proposals",
+        indent: true,
+      },
     ],
   },
   {
     title: "Forms",
+    requiredRoles: ["root_admin", "super_admin", "manager"],
     items: [
       {
         label: "Inquiry",
@@ -58,6 +73,16 @@ const navSections: Array<{ title?: string; items: NavItem[] }> = [
         label: "Waitlist",
         href: "/admin/forms/waitlist",
         indent: true,
+      },
+    ],
+  },
+  {
+    title: "Administration",
+    requiredRoles: ["root_admin", "super_admin"],
+    items: [
+      {
+        label: "Users & Admins",
+        href: "/admin/users",
       },
     ],
   },
@@ -91,10 +116,14 @@ export default function AdminShell({
 }: {
   children: React.ReactNode;
 }) {
+  const { data: session } = useSession();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [dbHealth, setDbHealth] = useState<DbHealth>("checking");
   const [isRefreshingHealth, setIsRefreshingHealth] = useState(false);
   const pathname = usePathname();
+
+  const userRole = session?.user?.role || "user";
 
   const closeSidebar = () => setIsSidebarOpen(false);
 
@@ -119,6 +148,22 @@ export default function AdminShell({
     checkDbHealth();
   }, []);
 
+  // Filter navigation sections based on current user role
+  const navSections = useMemo(() => {
+    return rawNavSections.filter((section) => {
+      if (!section.requiredRoles) return true;
+      return section.requiredRoles.includes(userRole);
+    });
+  }, [userRole]);
+
+  const roleLabels: Record<string, string> = {
+    root_admin: "Root Admin",
+    super_admin: "Super Admin",
+    manager: "Manager",
+    author: "Author",
+    user: "Explorer",
+  };
+
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <header className="flex h-16 items-center justify-between border-b border-border bg-background px-4 sm:px-6">
@@ -128,7 +173,7 @@ export default function AdminShell({
             aria-label="Toggle sidebar"
             aria-expanded={isSidebarOpen}
             onClick={() => setIsSidebarOpen((prev) => !prev)}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-border/70 bg-background text-foreground transition hover:bg-surface-muted lg:hidden"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-border/70 bg-background text-foreground transition hover:bg-surface-muted lg:hidden cursor-pointer"
           >
             <span className="sr-only">Menu</span>
             <span className="flex flex-col gap-1.5">
@@ -150,17 +195,20 @@ export default function AdminShell({
             </span>
           </button>
 
-          <Link href="/" className="text-lg font-semibold tracking-tight">
+          <Link href="/" className="text-lg font-semibold tracking-tight hover:opacity-85 transition">
             Mela Space
           </Link>
+          <span className="text-xs px-2 py-0.5 rounded-full bg-surface-muted border border-border text-foreground/70 hidden sm:inline-block">
+            {roleLabels[userRole] || "Admin"}
+          </span>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           <button
             type="button"
             onClick={checkDbHealth}
             disabled={isRefreshingHealth}
-            className="inline-flex items-center gap-2 rounded-md border border-border/70 bg-background px-2 py-1 text-xs text-foreground/75 transition hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-70"
+            className="inline-flex items-center gap-2 rounded-md border border-border/70 bg-background px-2.5 py-1 text-xs text-foreground/75 transition hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-70 cursor-pointer"
             aria-live="polite"
             title="Check database connectivity"
           >
@@ -174,8 +222,21 @@ export default function AdminShell({
               }`}
               aria-hidden="true"
             />
-            <span>
+            <span className="hidden sm:inline">
               DB {dbHealth === "ok" ? "online" : dbHealth === "down" ? "offline" : "checking"}
+            </span>
+          </button>
+
+          {/* User profile quick trigger */}
+          <button
+            type="button"
+            onClick={() => setProfileModalOpen(true)}
+            className="flex items-center gap-2 rounded-md border border-border/70 bg-background px-2.5 py-1 text-xs text-foreground/85 transition hover:bg-surface-muted cursor-pointer"
+            title="Edit profile & display name"
+          >
+            <DefaultAvatar name={session?.user?.name || "Admin"} size="sm" />
+            <span className="hidden md:inline-block font-medium truncate max-w-[120px]">
+              {session?.user?.name || "Profile"}
             </span>
           </button>
 
@@ -227,7 +288,7 @@ export default function AdminShell({
                           item.indent ? "pl-8" : "pl-3"
                         } ${
                           active
-                            ? "bg-surface-muted text-foreground"
+                            ? "bg-surface-muted text-foreground font-medium"
                             : "text-foreground/80 hover:bg-surface-muted"
                         }`}
                       >
@@ -265,6 +326,11 @@ export default function AdminShell({
           </Suspense>
         </section>
       </div>
+
+      <ProfileModal
+        isOpen={profileModalOpen}
+        onClose={() => setProfileModalOpen(false)}
+      />
     </div>
   );
 }

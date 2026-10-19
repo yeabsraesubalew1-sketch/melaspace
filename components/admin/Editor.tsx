@@ -56,8 +56,23 @@ export default function Editor({ initialData, onChange }: EditorProps) {
         return;
       }
 
-      const { default: DragDrop } = await import("editorjs-drag-drop");
-      new DragDrop(editor);
+      try {
+        if (holderRef.current && isMounted) {
+          const editorWithConfig = editor as unknown as {
+            configuration?: { holder?: HTMLElement | string; readOnly?: boolean };
+          };
+          if (!editorWithConfig.configuration) {
+            editorWithConfig.configuration = {
+              holder: holderRef.current,
+              readOnly: false,
+            };
+          }
+          const { default: DragDrop } = await import("editorjs-drag-drop");
+          new DragDrop(editor);
+        }
+      } catch (dragDropErr) {
+        console.warn("DragDrop initialization bypassed:", dragDropErr);
+      }
     };
 
     init();

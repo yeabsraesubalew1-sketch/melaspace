@@ -13,7 +13,7 @@ import type { ApiResponse } from "@/types/api";
 export async function GET(req: Request) {
   try {
     // -------------------------
-    // Auth check (admin only)
+    // Auth check (manager, super_admin, root_admin)
     // -------------------------
     const session = await getServerSession(authOptions);
 
@@ -25,6 +25,17 @@ export async function GET(req: Request) {
           error: "Unauthorized",
         },
         { status: 401 }
+      );
+    }
+
+    if (!["root_admin", "super_admin", "manager"].includes(session.user.role)) {
+      return NextResponse.json<ApiResponse<null>>(
+        {
+          success: false,
+          data: null,
+          error: "Forbidden: insufficient permissions",
+        },
+        { status: 403 }
       );
     }
 

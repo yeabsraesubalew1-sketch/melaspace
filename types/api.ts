@@ -20,6 +20,12 @@ export interface BlogCategoryPreview {
   slug: string;
 }
 
+export interface BlogAuthorPreview {
+  id?: string;
+  name: string;
+  avatar?: string;
+}
+
 /**
  * Lightweight blog shape for lists, search, previews.
  */
@@ -31,6 +37,13 @@ export interface BlogPreview {
   categories: BlogCategoryPreview[];
   publishedAt?: string;
   status?: "draft" | "published";
+  isPinned?: boolean;
+  views?: number;
+  author?: BlogAuthorPreview;
+  authorId?: string;
+  authorName?: string;
+  isAnonymous?: boolean;
+  isBookmarked?: boolean;
 }
 
 /**

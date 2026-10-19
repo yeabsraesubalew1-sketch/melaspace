@@ -41,6 +41,8 @@ export const metadata: Metadata = {
 	},
 };
 
+import AuthProvider from "@/components/providers/AuthProvider";
+
 export default function RootLayout({
 	children,
 }: {
@@ -49,12 +51,14 @@ export default function RootLayout({
 	return (
 		<html lang="en">
 			<body className={`${manrope.className} ${cormorant.variable} min-h-screen bg-background text-foreground`}>
-				<Toaster position="top-center" />
-				<div className="relative min-h-screen w-full bg-background">
-					<div className="relative z-10">
-						{children}
+				<AuthProvider>
+					<Toaster position="top-center" />
+					<div className="relative min-h-screen w-full bg-background">
+						<div className="relative z-10">
+							{children}
+						</div>
 					</div>
-				</div>
+				</AuthProvider>
 			</body>
 		</html>
 	);

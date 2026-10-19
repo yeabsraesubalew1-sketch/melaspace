@@ -59,12 +59,42 @@ export async function GET(
 
     const blog = await Blog.findById(id)
       .populate("categories", "_id name slug")
+      .populate("author", "name email role")
+      .populate("lastEditedBy", "name email role")
       .lean();
 
     if (!blog) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, data: null, error: "Blog not found" },
         { status: 404 }
+      );
+    }
+
+    const userRole = session.user.role;
+    const authorVal = blog.author as unknown;
+    const authorId =
+      authorVal && typeof authorVal === "object" && "_id" in authorVal
+        ? String((authorVal as { _id: unknown })._id)
+        : authorVal
+          ? String(authorVal)
+          : undefined;
+    const isOwner = Boolean(authorId && authorId === session.user.id);
+    const isTeamPost =
+      blog.authorName === "Mela Team" ||
+      (Boolean(blog.isAnonymous) && blog.authorName !== "Anonymous");
+
+    // "Mela Team" posts are institutional shared posts editable by all admins;
+    // individual posts require Root Admin or original owner
+    const canAccess =
+      userRole === "root_admin" ||
+      isOwner ||
+      (isTeamPost && ["super_admin", "manager"].includes(userRole)) ||
+      (!blog.author && ["super_admin", "manager"].includes(userRole));
+
+    if (!canAccess) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, data: null, error: "Forbidden: Only the Root Administrator can edit other people's personal posts." },
+        { status: 403 }
       );
     }
 
@@ -86,6 +116,10 @@ export async function GET(
 // PUT /api/admin/blogs/[id]
 // Update blog
 //
+//
+// PUT /api/admin/blogs/[id]
+// Update blog
+//
 export async function PUT(
   req: Request,
   { params }: { params: Promise<Params> }
@@ -94,10 +128,18 @@ export async function PUT(
     const { id } = await params;
     const session = await getServerSession(authOptions);
 
-    if (!session) {
+    if (!session || !session.user) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, data: null, error: "Unauthorized" },
         { status: 401 }
+      );
+    }
+
+    const userRole = session.user.role;
+    if (!["root_admin", "super_admin", "manager", "author"].includes(userRole)) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, data: null, error: "Forbidden: insufficient permissions" },
+        { status: 403 }
       );
     }
 
@@ -111,7 +153,7 @@ export async function PUT(
     await connectDB();
 
     const body = await req.json();
-    const { title, excerpt, content, categories, status } = body;
+    const { title, excerpt, content, categories, status, isPinned, isAnonymous } = body;
 
     const blog = await Blog.findById(id);
 
@@ -122,11 +164,96 @@ export async function PUT(
       );
     }
 
-    // ---- Immutable: slug is NOT editable ----
+    // Only Root Admin can edit other admins' personal posts.
+    // "Mela Team" posts are institutional shared posts and can be edited by all admins.
+    const isOwner = blog.author && blog.author.toString() === session.user.id;
+    const isTeamPost =
+      blog.authorName === "Mela Team" ||
+      (Boolean(blog.isAnonymous) && blog.authorName !== "Anonymous");
+
+    const canAccess =
+      userRole === "root_admin" ||
+      isOwner ||
+      (isTeamPost && ["super_admin", "manager"].includes(userRole)) ||
+      (!blog.author && ["super_admin", "manager"].includes(userRole));
+
+    if (!canAccess) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, data: null, error: "Forbidden: Only the Root Administrator can edit other people's personal posts." },
+        { status: 403 }
+      );
+    }
+
+    // Handle isPinned (only super_admin and root_admin, must be published)
+    if (typeof isPinned === "boolean") {
+      if (isPinned) {
+        if (!["root_admin", "super_admin"].includes(userRole)) {
+          return NextResponse.json<ApiResponse<null>>(
+            { success: false, data: null, error: "Only Super Admins can pin posts." },
+            { status: 403 }
+          );
+        }
+
+        const effectiveStatus = status || blog.status;
+        if (effectiveStatus !== "published") {
+          return NextResponse.json<ApiResponse<null>>(
+            {
+              success: false,
+              data: null,
+              error: "Pinned blogs must be published. Please publish the blog to pin it.",
+            },
+            { status: 400 }
+          );
+        }
+
+        if (!blog.isPinned) {
+          const pinnedCount = await Blog.countDocuments({ isPinned: true, _id: { $ne: blog._id } });
+          if (pinnedCount >= 3) {
+            return NextResponse.json<ApiResponse<null>>(
+              {
+                success: false,
+                data: null,
+                error: "Maximum of 3 blogs can be pinned. Please unpin another blog first.",
+              },
+              { status: 400 }
+            );
+          }
+        }
+
+        blog.isPinned = true;
+      } else {
+        blog.isPinned = false;
+      }
+    }
+
+    // Handle isAnonymous & forced "Mela Team" conversion
+    if (typeof isAnonymous === "boolean") {
+      const canChangeAttribution = userRole === "root_admin" || isOwner;
+      if (canChangeAttribution) {
+        blog.isAnonymous = isAnonymous;
+        if (isAnonymous) {
+          blog.authorName = "Mela Team";
+        } else {
+          // Restore original author credit, never claim as editor's personal name
+          const User = (await import("@/models/User")).default;
+          const authorUser = blog.author ? await User.findById(blog.author).select("name") : null;
+          blog.authorName =
+            authorUser?.name ||
+            (blog.authorName !== "Mela Team" && blog.authorName ? blog.authorName : "Mela Team");
+        }
+      }
+    }
 
     if (title !== undefined) blog.title = title;
-    if (excerpt !== undefined) blog.excerpt = excerpt;
+    if (excerpt !== undefined) {
+      blog.excerpt = typeof excerpt === "string" ? excerpt.trim().slice(0, 300) : excerpt;
+    }
     if (content !== undefined) blog.content = content;
+
+    // Record last edited by
+    if (session.user.id) {
+      blog.lastEditedBy = new Types.ObjectId(session.user.id);
+    }
 
     //
     // Validate & update categories (ObjectId[])
@@ -185,6 +312,13 @@ export async function PUT(
     }
 
     //
+    // Anonymous posting toggle
+    //
+    if (typeof isAnonymous === "boolean") {
+      blog.isAnonymous = isAnonymous;
+    }
+
+    //
     // Status logic
     //
     if (status && status !== blog.status) {
@@ -239,10 +373,18 @@ export async function DELETE(
     const { id } = await params;
     const session = await getServerSession(authOptions);
 
-    if (!session) {
+    if (!session || !session.user) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, data: null, error: "Unauthorized" },
         { status: 401 }
+      );
+    }
+
+    const userRole = session.user.role;
+    if (!["root_admin", "super_admin", "manager", "author"].includes(userRole)) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, data: null, error: "Forbidden: insufficient permissions" },
+        { status: 403 }
       );
     }
 
@@ -255,14 +397,36 @@ export async function DELETE(
 
     await connectDB();
 
-    const deleted = await Blog.findByIdAndDelete(id);
+    const blog = await Blog.findById(id);
 
-    if (!deleted) {
+    if (!blog) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, data: null, error: "Blog not found" },
         { status: 404 }
       );
     }
+
+    // Only Root Admin or the author can delete personal posts.
+    // "Mela Team" posts can be deleted by Super Admins and Root Admin.
+    const isOwner = blog.author && blog.author.toString() === session.user.id;
+    const isTeamPost =
+      blog.authorName === "Mela Team" ||
+      (Boolean(blog.isAnonymous) && blog.authorName !== "Anonymous");
+
+    const canDelete =
+      userRole === "root_admin" ||
+      isOwner ||
+      (isTeamPost && ["root_admin", "super_admin"].includes(userRole)) ||
+      (!blog.author && userRole === "super_admin");
+
+    if (!canDelete) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, data: null, error: "Forbidden: Only the Root Administrator can delete other people's personal posts." },
+        { status: 403 }
+      );
+    }
+
+    await Blog.findByIdAndDelete(id);
 
     return NextResponse.json<ApiResponse<{ id: string }>>({
       success: true,

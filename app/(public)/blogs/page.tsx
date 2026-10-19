@@ -32,6 +32,9 @@ interface Blog {
     slug: string;
   }[];
   publishedAt?: string;
+  isPinned?: boolean;
+  views?: number;
+  authorName?: string;
 }
 
 interface Category {
@@ -94,7 +97,7 @@ async function fetchBlogs(params: string) {
 
 async function fetchCategories(): Promise<Category[]> {
   const res = await fetch(`${getBaseUrl()}/api/categories`, {
-    cache: "force-cache",
+    next: { revalidate: 60 },
   });
 
   const json = await res.json();

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import BlogEditor from "@/components/admin/blog-editor";
 import AdminRouteNoticeToast from "@/components/admin/AdminRouteNoticeToast";
 
@@ -30,7 +31,9 @@ export default async function NewBlogPage({
         </p>
       </div>
 
-      <BlogEditor mode="create" />
+      <Suspense fallback={<div className="h-96 rounded-xl border border-border bg-surface-muted animate-pulse" />}>
+        <BlogEditor mode="create" />
+      </Suspense>
     </div>
   );
 }

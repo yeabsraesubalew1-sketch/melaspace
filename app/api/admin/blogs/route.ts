@@ -65,6 +65,11 @@ export async function GET(req: Request) {
       categories: { _id: string; name: string; slug: string }[];
       status: "draft" | "published";
       publishedAt?: Date;
+      isPinned?: boolean;
+      views?: number;
+      author?: { toString(): string };
+      authorName?: string;
+      isAnonymous?: boolean;
     }
 
     const mapPreview = (blog: BlogLean): BlogPreview => ({
@@ -72,13 +77,18 @@ export async function GET(req: Request) {
       title: blog.title,
       slug: blog.slug,
       excerpt: blog.excerpt,
-      categories: blog.categories.map((cat) => ({
+      categories: (blog.categories || []).map((cat) => ({
         _id: cat._id,
         name: cat.name,
         slug: cat.slug,
       })),
       status: blog.status,
       publishedAt: blog.publishedAt?.toISOString(),
+      isPinned: Boolean(blog.isPinned),
+      views: blog.views ?? 0,
+      authorId: blog.author ? blog.author.toString() : undefined,
+      authorName: blog.authorName || "Mela Team",
+      isAnonymous: Boolean(blog.isAnonymous),
     });
 
     if (status) {
@@ -114,7 +124,7 @@ export async function GET(req: Request) {
         Blog.countDocuments(filter),
         Blog.find(filter)
           .populate("categories", "name slug")
-          .sort(status === "published" ? { publishedAt: -1 } : { updatedAt: -1 })
+          .sort(status === "published" ? { isPinned: -1, publishedAt: -1 } : { updatedAt: -1 })
           .skip(skip)
           .limit(limit)
           .lean<BlogLean[]>(),
@@ -142,7 +152,7 @@ export async function GET(req: Request) {
 
       Blog.find({ status: "published" })
         .populate("categories", "name slug")
-        .sort({ publishedAt: -1 })
+        .sort({ isPinned: -1, publishedAt: -1 })
         .skip(skip)
         .limit(limit)
         .lean<BlogLean[]>(),
@@ -175,10 +185,18 @@ export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session) {
+    if (!session || !session.user) {
       return NextResponse.json<ApiResponse<null>>(
         { success: false, data: null, error: "Unauthorized" },
         { status: 401 }
+      );
+    }
+
+    const userRole = session.user.role;
+    if (!["root_admin", "super_admin", "manager", "author"].includes(userRole)) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, data: null, error: "Forbidden: insufficient permissions" },
+        { status: 403 }
       );
     }
 
@@ -186,7 +204,15 @@ export async function POST(req: Request) {
 
     const body = await req.json();
 
-    const { title, content, categories = [], status = "draft" } = body;
+    const {
+      title,
+      content,
+      categories = [],
+      status = "draft",
+      excerpt: customExcerpt,
+      isPinned = false,
+      isAnonymous = false,
+    } = body;
 
     if (!title || !content) {
       return NextResponse.json<ApiResponse<null>>(
@@ -195,11 +221,49 @@ export async function POST(req: Request) {
       );
     }
 
+    // Handle isPinned (only super_admin and root_admin can pin, max 3, MUST be published)
+    let shouldPin = false;
+    if (isPinned) {
+      if (!["root_admin", "super_admin"].includes(userRole)) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, data: null, error: "Only Super Admins can pin posts." },
+          { status: 403 }
+        );
+      }
+
+      if (status !== "published") {
+        return NextResponse.json<ApiResponse<null>>(
+          {
+            success: false,
+            data: null,
+            error: "Pinned blogs must be published. Please publish the blog to pin it.",
+          },
+          { status: 400 }
+        );
+      }
+
+      const pinnedCount = await Blog.countDocuments({ isPinned: true });
+      if (pinnedCount >= 3) {
+        return NextResponse.json<ApiResponse<null>>(
+          {
+            success: false,
+            data: null,
+            error: "Maximum of 3 blogs can be pinned. Please unpin an existing one first.",
+          },
+          { status: 400 }
+        );
+      }
+      shouldPin = true;
+    }
+
     // Generate slug automatically
     const slug = await generateUniqueSlug(title);
 
-    // Generate excerpt automatically
-    const excerpt = generateExcerpt(content);
+    // Use custom excerpt if provided, otherwise auto-generate
+    const finalExcerpt =
+      typeof customExcerpt === "string" && customExcerpt.trim().length > 0
+        ? customExcerpt.trim().slice(0, 300)
+        : generateExcerpt(content);
 
     //
     // Validate categories
@@ -257,10 +321,14 @@ export async function POST(req: Request) {
     const blog = await Blog.create({
       title,
       slug,
-      excerpt,
+      excerpt: finalExcerpt,
       content,
       categories: categoryIds,
       status,
+      isPinned: shouldPin,
+      isAnonymous: Boolean(isAnonymous),
+      author: session.user.id ? new Types.ObjectId(session.user.id) : undefined,
+      authorName: isAnonymous ? "Mela Team" : (session.user.name || "Mela Team"),
       publishedAt: status === "published" ? new Date() : undefined,
     });
 

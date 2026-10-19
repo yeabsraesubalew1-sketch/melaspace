@@ -29,6 +29,9 @@ interface PublicBlogPreview {
   excerpt: string;
   categories: PopulatedCategory[];
   publishedAt?: string;
+  isPinned?: boolean;
+  views?: number;
+  authorName?: string;
 }
 
 interface PopulatedCategoryDoc {
@@ -96,25 +99,39 @@ if (category) {
 const total = await Blog.countDocuments(filter);
 
     const blogs = await Blog.find(filter)
-      .sort({ publishedAt: -1 })
+      .sort({ isPinned: -1, publishedAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit)
-      .select("title slug excerpt categories publishedAt")
+      .select("title slug excerpt categories publishedAt isPinned views author authorName isAnonymous")
       .populate("categories", "_id name slug")
+      .populate("author", "role")
       .lean();
 
-    const data: PublicBlogPreview[] = blogs.map((b) => ({
-      id: b._id.toString(),
-      title: b.title,
-      slug: b.slug,
-      excerpt: b.excerpt,
-      categories: ((b.categories ?? []) as unknown as PopulatedCategoryDoc[]).map((category) => ({
-        _id: category._id.toString(),
-        name: category.name,
-        slug: category.slug,
-      })),
-      publishedAt: b.publishedAt?.toISOString(),
-    }));
+    const data: PublicBlogPreview[] = blogs.map((b) => {
+      const authorRole = b.author && typeof b.author === "object" && "role" in b.author
+        ? (b.author as { role?: string }).role
+        : undefined;
+      const isTeamAuthor = authorRole && ["root_admin", "super_admin", "manager"].includes(authorRole);
+      const authorName = b.isAnonymous
+        ? (b.authorName === "Anonymous" || !isTeamAuthor ? "Anonymous" : "Mela Team")
+        : (b.authorName || "Mela Team");
+
+      return {
+        id: b._id.toString(),
+        title: b.title,
+        slug: b.slug,
+        excerpt: b.excerpt,
+        categories: ((b.categories ?? []) as unknown as PopulatedCategoryDoc[]).map((category) => ({
+          _id: category._id.toString(),
+          name: category.name,
+          slug: category.slug,
+        })),
+        publishedAt: b.publishedAt?.toISOString(),
+        isPinned: Boolean(b.isPinned),
+        views: b.views ?? 0,
+        authorName,
+      };
+    });
 
     return NextResponse.json<ApiResponse<PublicBlogPreview[]>>({
       success: true,
