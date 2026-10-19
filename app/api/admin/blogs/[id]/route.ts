@@ -6,6 +6,7 @@ import { Blog } from "@/models/Blog";
 import { Category } from "@/models/Category";
 import { Types } from "mongoose";
 import type { ApiResponse } from "@/types/api";
+import { syncEntityAssets, trashEntityAssets } from "@/lib/filevault-cleanup";
 
 interface Params {
   id: string;
@@ -335,6 +336,15 @@ export async function PUT(
 
     await blog.save(); // schema ensures fallback category
 
+    const blocks =
+      typeof blog.content === "object" &&
+      blog.content !== null &&
+      "blocks" in blog.content &&
+      Array.isArray((blog.content as { blocks?: unknown[] }).blocks)
+        ? (blog.content as { blocks: unknown[] }).blocks
+        : [];
+    await syncEntityAssets("blog", blog._id, blocks, userRole);
+
     return NextResponse.json<ApiResponse<{ id: string }>>({
       success: true,
       data: { id: blog._id.toString() },
@@ -427,6 +437,7 @@ export async function DELETE(
     }
 
     await Blog.findByIdAndDelete(id);
+    await trashEntityAssets("blog", id, userRole);
 
     return NextResponse.json<ApiResponse<{ id: string }>>({
       success: true,

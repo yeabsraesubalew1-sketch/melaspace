@@ -9,6 +9,7 @@ import { Types } from "mongoose";
 import type { ApiResponse, BlogPreview } from "@/types/api";
 import { generateUniqueSlug } from "@/lib/slugify";
 import { generateExcerpt } from "@/lib/generateExcerpt";
+import { syncEntityAssets } from "@/lib/filevault-cleanup";
 
 function getUserFacingError(error: unknown) {
   if (error instanceof Error) {
@@ -331,6 +332,15 @@ export async function POST(req: Request) {
       authorName: isAnonymous ? "Mela Team" : (session.user.name || "Mela Team"),
       publishedAt: status === "published" ? new Date() : undefined,
     });
+
+    const blocks =
+      typeof content === "object" &&
+      content !== null &&
+      "blocks" in content &&
+      Array.isArray((content as { blocks?: unknown[] }).blocks)
+        ? (content as { blocks: unknown[] }).blocks
+        : [];
+    await syncEntityAssets("blog", blog._id, blocks, userRole);
 
     return NextResponse.json<ApiResponse<{ id: string }>>(
       {

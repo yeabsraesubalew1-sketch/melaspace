@@ -6,6 +6,8 @@ import Marker from "@editorjs/marker";
 import InlineCode from "@editorjs/inline-code";
 import Underline from "@editorjs/underline";
 import type { API, BlockTune } from "@editorjs/editorjs";
+import { ImageTool } from "./editor-tools/ImageTool";
+import { FileTool } from "./editor-tools/FileTool";
 
 
 type EmbedConstructor = new (...args: never[]) => object;
@@ -417,6 +419,15 @@ export const createEditorTools = async () => {
 
     underline: {
       class: Underline,
+    },
+
+    image: {
+      class: ImageTool,
+      inlineToolbar: true,
+    },
+
+    file: {
+      class: FileTool,
     },
   };
 };

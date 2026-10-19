@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import toast from "react-hot-toast";
-import { useRouter } from "next/navigation";
 import Renderer from "@/components/editorjs/Renderer";
 import type { EditorContent } from "@/types/editor";
 
@@ -39,7 +38,6 @@ interface ProposalDoc {
 }
 
 export default function AdminProposalsPage() {
-  const router = useRouter();
   const [proposals, setProposals] = useState<ProposalDoc[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState<"all" | "pending" | "approved" | "rejected">("pending");
@@ -293,6 +291,7 @@ export default function AdminProposalsPage() {
                           version: (prop.content as Partial<EditorContent>).version ?? "2.31.3",
                           blocks: (prop.content as { blocks: EditorContent["blocks"] }).blocks ?? [],
                         }}
+                        blogTitle={prop.title}
                         openLinksInNewTab
                       />
                     ) : (

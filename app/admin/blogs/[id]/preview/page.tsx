@@ -78,7 +78,7 @@ export default async function AdminBlogPreviewPage({
       <hr className="border-border" />
 
       <div className="space-y-4">
-        <Renderer content={blog.content} openLinksInNewTab />
+        <Renderer content={blog.content} blogTitle={blog.title} openLinksInNewTab />
       </div>
     </main>
   );

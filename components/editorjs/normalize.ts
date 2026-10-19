@@ -156,6 +156,127 @@ export function normalizeEditorContent(
         });
         break;
 
+      case "image":
+        {
+          const fileData =
+            data?.file && typeof data.file === "object"
+              ? (data.file as Record<string, unknown>)
+              : undefined;
+          const url = (
+            typeof data?.url === "string"
+              ? data.url
+              : typeof fileData?.url === "string"
+                ? fileData.url
+                : ""
+          ).trim();
+
+          if (url) {
+            normalized.push({
+              type: "image",
+              data: {
+                id:
+                  typeof data?.id === "number"
+                    ? data.id
+                    : typeof fileData?.id === "number"
+                      ? (fileData.id as number)
+                      : undefined,
+                fileVaultId:
+                  typeof data?.fileVaultId === "number"
+                    ? data.fileVaultId
+                    : typeof fileData?.id === "number"
+                      ? (fileData.id as number)
+                      : undefined,
+                url,
+                caption: typeof data?.caption === "string" ? data.caption : undefined,
+                width: typeof data?.width === "number" ? data.width : undefined,
+                alignment:
+                  data?.alignment === "left" || data?.alignment === "right"
+                    ? (data.alignment as "left" | "right")
+                    : "center",
+                withBorder: Boolean(data?.withBorder),
+                stretched: Boolean(data?.stretched),
+                withBackground: Boolean(data?.withBackground),
+                original_name:
+                  typeof data?.original_name === "string" ? data.original_name : undefined,
+                size_bytes:
+                  typeof data?.size_bytes === "number" ? data.size_bytes : undefined,
+              },
+            });
+          }
+        }
+        break;
+
+      case "file":
+      case "attaches":
+        {
+          const fileData =
+            data?.file && typeof data.file === "object"
+              ? (data.file as Record<string, unknown>)
+              : undefined;
+          const candidateId =
+            typeof data?.id === "number"
+              ? data.id
+              : typeof data?.fileVaultId === "number"
+                ? data.fileVaultId
+                : typeof fileData?.id === "number"
+                  ? (fileData.id as number)
+                  : undefined;
+          const url =
+            typeof data?.url === "string"
+              ? data.url
+              : typeof data?.downloadUrl === "string"
+                ? data.downloadUrl
+                : typeof fileData?.url === "string"
+                  ? (fileData.url as string)
+                  : "";
+          const downloadUrl =
+            typeof data?.downloadUrl === "string"
+              ? data.downloadUrl
+              : candidateId
+                ? `/api/uploads/download/${candidateId}`
+                : url;
+
+          if (url || downloadUrl) {
+            normalized.push({
+              type: "file",
+              data: {
+                id: candidateId,
+                fileVaultId: candidateId,
+                url: url || downloadUrl,
+                downloadUrl,
+                original_name:
+                  typeof data?.original_name === "string"
+                    ? data.original_name
+                    : typeof fileData?.name === "string"
+                      ? (fileData.name as string)
+                      : undefined,
+                title:
+                  typeof data?.title === "string"
+                    ? data.title
+                    : typeof data?.original_name === "string"
+                      ? data.original_name
+                      : undefined,
+                mime_type:
+                  typeof data?.mime_type === "string"
+                    ? data.mime_type
+                    : typeof fileData?.extension === "string"
+                      ? (fileData.extension as string)
+                      : undefined,
+                size_bytes:
+                  typeof data?.size_bytes === "number"
+                    ? data.size_bytes
+                    : typeof fileData?.size === "number"
+                      ? (fileData.size as number)
+                      : undefined,
+                extension:
+                  typeof data?.extension === "string" ? data.extension : undefined,
+                isPrivate: data?.isPrivate !== false,
+              },
+            });
+          }
+        }
+        break;
+
       default:
         // ignore unsupported blocks
         break;

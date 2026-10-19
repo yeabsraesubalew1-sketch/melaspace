@@ -452,6 +452,23 @@ export default function BlogEditor({ mode, blogId }: BlogEditorProps) {
         </div>
       </div>
 
+      {/* EditorJS Article Body */}
+      <div className="space-y-2">
+        <div className="flex flex-wrap items-center justify-between gap-2 px-1">
+          <p className="text-xs font-medium uppercase tracking-wide text-foreground/60">
+            Article Content
+          </p>
+          <p className="text-xs text-foreground/45">
+            Use + or type / to insert headers, images, files, quotes, or embeds.
+          </p>
+        </div>
+        <Editor
+          key={blogId || "new-blog"}
+          initialData={content}
+          onChange={handleEditorChange}
+        />
+      </div>
+
       {/* Authorship & Provenance Box in Edit Mode */}
       {mode === "edit" && authorData && (
         <div className="rounded-xl border border-border bg-surface-muted/30 p-4 space-y-2.5 text-xs">

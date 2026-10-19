@@ -288,7 +288,7 @@ export default async function BlogPage({ params }: Props) {
 
             {/* Content */}
             <div className="space-y-4">
-              <Renderer content={blog.content} openLinksInNewTab />
+              <Renderer content={blog.content} blogTitle={blog.title} openLinksInNewTab />
             </div>
           </article>
         </div>

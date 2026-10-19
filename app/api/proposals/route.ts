@@ -4,6 +4,7 @@ import { connectDB } from "@/lib/db";
 import Proposal from "@/models/Proposal";
 import { Blog } from "@/models/Blog";
 import { Types } from "mongoose";
+import { syncEntityAssets } from "@/lib/filevault-cleanup";
 
 const MAX_PENDING_PROPOSALS = 3;
 
@@ -108,6 +109,30 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: "Content is required" }, { status: 400 });
     }
 
+    const blocks: Array<{ type?: string; [key: string]: unknown }> =
+      typeof content === "object" &&
+      content !== null &&
+      "blocks" in content &&
+      Array.isArray((content as { blocks?: unknown[] }).blocks)
+        ? ((content as { blocks: unknown[] }).blocks as Array<{ type?: string; [key: string]: unknown }>)
+        : [];
+
+    const isAdmin = ["root_admin", "super_admin", "manager", "author"].includes(auth.session.user.role);
+    if (!isAdmin) {
+      const imageCount = blocks.filter((b) => b?.type === "image").length;
+      const fileCount = blocks.filter((b) => b?.type === "file" || b?.type === "attaches").length;
+      if (imageCount > 3 || fileCount > 3) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Explorers can upload a maximum of 3 images and 3 files per proposal.",
+            code: "EXPLORER_CAP_EXCEEDED",
+          },
+          { status: 400 }
+        );
+      }
+    }
+
     const cleanedCategories = Array.isArray(suggestedCategories)
       ? suggestedCategories
           .map((c) => (typeof c === "string" ? c.trim() : ""))
@@ -147,6 +172,8 @@ export async function POST(req: Request) {
       blogSlug: resolvedBlogSlug,
       isAnonymous: Boolean(isAnonymous),
     });
+
+    await syncEntityAssets("proposal", proposal._id, blocks, auth.session.user.role);
 
     return NextResponse.json(
       {

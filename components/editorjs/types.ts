@@ -6,7 +6,10 @@ export type BlockType =
   | "list"
   | "quote"
   | "embed"
-  | "delimiter";
+  | "delimiter"
+  | "image"
+  | "file"
+  | "attaches";
 
 /* -------------------------------- */
 /* Paragraph */
@@ -100,6 +103,47 @@ export interface DividerBlock {
 }
 
 /* -------------------------------- */
+/* Image */
+/* -------------------------------- */
+
+export interface ImageBlock {
+  type: "image";
+  data: {
+    id?: number;
+    fileVaultId?: number;
+    url: string;
+    caption?: string;
+    width?: number;
+    alignment?: "left" | "center" | "right";
+    withBorder?: boolean;
+    stretched?: boolean;
+    withBackground?: boolean;
+    original_name?: string;
+    size_bytes?: number;
+  };
+}
+
+/* -------------------------------- */
+/* File / Attachment */
+/* -------------------------------- */
+
+export interface FileBlock {
+  type: "file" | "attaches";
+  data: {
+    id?: number;
+    fileVaultId?: number;
+    url?: string;
+    downloadUrl?: string;
+    original_name?: string;
+    title?: string;
+    mime_type?: string;
+    size_bytes?: number;
+    extension?: string;
+    isPrivate?: boolean;
+  };
+}
+
+/* -------------------------------- */
 /* Union */
 /* -------------------------------- */
 
@@ -109,4 +153,6 @@ export type RenderableBlock =
   | ListBlock
   | QuoteBlock
   | EmbedBlock
-  | DividerBlock;
+  | DividerBlock
+  | ImageBlock
+  | FileBlock;

@@ -8,6 +8,8 @@ import User from "@/models/User";
 import { generateUniqueSlug } from "@/lib/slugify";
 import { generateExcerpt } from "@/lib/generateExcerpt";
 import { Types } from "mongoose";
+import type { EditorContent } from "@/types/editor";
+import { syncEntityAssets, trashEntityAssets } from "@/lib/filevault-cleanup";
 
 interface Params {
   id: string;
@@ -127,6 +129,27 @@ export async function PUT(
         if (!hasValid) {
           return NextResponse.json({ success: false, error: "Content cannot be empty" }, { status: 400 });
         }
+
+        const candidateBlocks: Array<{ type?: string; [key: string]: unknown }> =
+          typeof content === "object" &&
+          content !== null &&
+          "blocks" in content &&
+          Array.isArray((content as { blocks?: unknown[] }).blocks)
+            ? ((content as { blocks: unknown[] }).blocks as Array<{ type?: string; [key: string]: unknown }>)
+            : [];
+        const imageCount = candidateBlocks.filter((b) => b?.type === "image").length;
+        const fileCount = candidateBlocks.filter((b) => b?.type === "file" || b?.type === "attaches").length;
+        if (imageCount > 3 || fileCount > 3) {
+          return NextResponse.json(
+            {
+              success: false,
+              error: "Explorers can upload a maximum of 3 images and 3 files per proposal.",
+              code: "EXPLORER_CAP_EXCEEDED",
+            },
+            { status: 400 }
+          );
+        }
+
         proposal.content = typeof content === "string" ? content.trim() : content;
       }
 
@@ -138,6 +161,15 @@ export async function PUT(
       }
 
       await proposal.save();
+
+      const userBlocks =
+        typeof proposal.content === "object" &&
+        proposal.content !== null &&
+        "blocks" in proposal.content &&
+        Array.isArray((proposal.content as { blocks?: unknown[] }).blocks)
+          ? (proposal.content as { blocks: unknown[] }).blocks
+          : [];
+      await syncEntityAssets("proposal", proposal._id, userBlocks, auth.session.user.role);
 
       return NextResponse.json({
         success: true,
@@ -255,7 +287,7 @@ export async function PUT(
 
         const calculatedExcerpt =
           proposal.excerpt?.trim() ||
-          generateExcerpt(blogContent as any, 200) ||
+          generateExcerpt(blogContent as unknown as EditorContent, 200) ||
           "Article excerpt";
 
         // CASE 1: Revision proposal for an existing live blog
@@ -264,7 +296,7 @@ export async function PUT(
           if (existingBlog) {
             existingBlog.title = proposal.title;
             existingBlog.excerpt = calculatedExcerpt;
-            existingBlog.content = blogContent as any;
+            existingBlog.content = blogContent as unknown as EditorContent;
             existingBlog.categories = categoryIds;
             existingBlog.isAnonymous = Boolean(proposal.isAnonymous);
             existingBlog.authorName = authorName;
@@ -282,7 +314,7 @@ export async function PUT(
             if (existingBlog) {
               existingBlog.title = proposal.title;
               existingBlog.excerpt = calculatedExcerpt;
-              existingBlog.content = blogContent as any;
+              existingBlog.content = blogContent as unknown as EditorContent;
               existingBlog.categories = categoryIds;
               existingBlog.isAnonymous = Boolean(proposal.isAnonymous);
               existingBlog.authorName = authorName;
@@ -299,7 +331,7 @@ export async function PUT(
               title: proposal.title,
               slug: generatedSlug,
               excerpt: calculatedExcerpt,
-              content: blogContent as any,
+              content: blogContent as unknown as EditorContent,
               categories: categoryIds,
               author: proposal.userId,
               authorName,
@@ -309,8 +341,9 @@ export async function PUT(
               lastEditedBy: new Types.ObjectId(auth.session.user.id),
             });
 
-            proposal.blogId = (newBlog as any)._id;
-            proposal.blogSlug = (newBlog as any).slug;
+            const createdBlog = newBlog as unknown as { _id: Types.ObjectId; slug: string };
+            proposal.blogId = createdBlog._id;
+            proposal.blogSlug = createdBlog.slug;
           }
         }
       } else if (status === "rejected") {
@@ -325,6 +358,19 @@ export async function PUT(
     }
 
     await proposal.save();
+
+    const adminBlocks =
+      typeof proposal.content === "object" &&
+      proposal.content !== null &&
+      "blocks" in proposal.content &&
+      Array.isArray((proposal.content as { blocks?: unknown[] }).blocks)
+        ? (proposal.content as { blocks: unknown[] }).blocks
+        : [];
+    await syncEntityAssets("proposal", proposal._id, adminBlocks, auth.session.user.role);
+
+    if (proposal.status === "approved" && proposal.blogId) {
+      await syncEntityAssets("blog", proposal.blogId, adminBlocks, "root_admin");
+    }
 
     // Populate for clean client return
     const populated = await Proposal.findById(proposal._id)
@@ -392,6 +438,7 @@ export async function DELETE(
     }
 
     await Proposal.findByIdAndDelete(id);
+    await trashEntityAssets("proposal", id, auth.session.user.role);
 
     return NextResponse.json({
       success: true,

@@ -7,10 +7,13 @@ import HeaderBlock from "./blocks/HeaderBlock";
 import ListBlock from "./blocks/ListBlock";
 import ParagraphBlock from "./blocks/ParagraphBlock";
 import QuoteBlock from "./blocks/QuoteBlock";
+import ImageBlock from "./blocks/ImageBlock";
+import FileBlock from "./blocks/FileBlock";
 
 interface Props {
   content: EditorContent;
   openLinksInNewTab?: boolean;
+  blogTitle?: string;
 }
 
 function enforceAnchorsOpenInNewTab(html: string) {
@@ -46,7 +49,7 @@ function mapHtmlStrings(value: unknown): unknown {
   return value;
 }
 
-export default function Renderer({ content, openLinksInNewTab = false }: Props) {
+export default function Renderer({ content, openLinksInNewTab = false, blogTitle }: Props) {
   const resolvedContent = openLinksInNewTab
     ? (mapHtmlStrings(content) as EditorContent)
     : content;
@@ -81,6 +84,10 @@ export default function Renderer({ content, openLinksInNewTab = false }: Props) 
             return <EmbedBlock key={key} block={block} />;
           case "delimiter":
             return <DividerBlock key={key} block={block} />;
+          case "image":
+            return <ImageBlock key={key} block={block} blogTitle={blogTitle} />;
+          case "file":
+            return <FileBlock key={key} block={block} />;
           default:
             return null;
         }

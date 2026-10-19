@@ -309,6 +309,18 @@ export default function ProposePostModal({
       return;
     }
 
+    const currentImages = (content.blocks || []).filter((b) => b.type === "image").length;
+    const currentFiles = (content.blocks || []).filter((b) => b.type === "file" || b.type === "attaches").length;
+
+    if (currentImages > 3) {
+      toast.error("Limit exceeded: Explorers can upload a maximum of 3 images per proposal.");
+      return;
+    }
+    if (currentFiles > 3) {
+      toast.error("Limit exceeded: Explorers can upload a maximum of 3 files per proposal.");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const isEditing = Boolean(editingProposalId);
@@ -638,12 +650,40 @@ export default function ProposePostModal({
               </div>
 
               {/* EditorJS Canvas */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium uppercase tracking-wide text-foreground/70">
-                  Article Draft / Outline *
-                </label>
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <label className="text-xs font-medium uppercase tracking-wide text-foreground/70">
+                    Article Draft / Outline *
+                  </label>
+                  {(() => {
+                    const imgCount = (content.blocks || []).filter((b) => b.type === "image").length;
+                    const flCount = (content.blocks || []).filter((b) => b.type === "file" || b.type === "attaches").length;
+                    return (
+                      <div className="flex items-center gap-2 text-[11px]">
+                        <span
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border ${
+                            imgCount >= 3
+                              ? "bg-amber-500/10 text-amber-600 border-amber-500/30 font-semibold"
+                              : "bg-surface-muted text-foreground/60 border-border"
+                          }`}
+                        >
+                          Images: {imgCount}/3
+                        </span>
+                        <span
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border ${
+                            flCount >= 3
+                              ? "bg-amber-500/10 text-amber-600 border-amber-500/30 font-semibold"
+                              : "bg-surface-muted text-foreground/60 border-border"
+                          }`}
+                        >
+                          Files: {flCount}/3
+                        </span>
+                      </div>
+                    );
+                  })()}
+                </div>
                 <p className="text-xs text-foreground/50">
-                  Format headings, bullet points, quotes, and draft your proposal with the rich editor.
+                  Format headings, bullet points, quotes, and upload up to 3 images and 3 files (max 100MB each).
                 </p>
                 <div className="min-h-[220px]">
                   <Editor
