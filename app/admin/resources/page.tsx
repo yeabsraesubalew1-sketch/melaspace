@@ -6,6 +6,7 @@ import Link from "next/link";
 import toast from "react-hot-toast";
 import ResourceModal from "@/components/admin/ResourceModal";
 import type { ResourceItem } from "@/types/api";
+import { warmFileVaultConnection } from "@/lib/filevault";
 
 const ALLOWED_ADMIN_ROLES = ["root_admin", "super_admin", "manager"];
 
@@ -63,6 +64,7 @@ export default function AdminResourcesPage() {
 
   useEffect(() => {
     if (isAllowed) {
+      warmFileVaultConnection();
       fetchResources();
     }
   }, [fetchResources, isAllowed]);
@@ -194,16 +196,12 @@ export default function AdminResourcesPage() {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={() => {
-            setEditingResource(null);
-            setIsModalOpen(true);
-          }}
-          className="btn btn-primary text-xs px-4 py-2.5 shadow-sm self-start sm:self-auto cursor-pointer"
+        <Link
+          href="/admin/resources/new"
+          className="btn btn-primary text-xs px-4 py-2.5 shadow-sm self-start sm:self-auto cursor-pointer inline-flex items-center gap-1.5"
         >
           + New Resource
-        </button>
+        </Link>
       </div>
 
       {/* Tabs Row */}
@@ -380,16 +378,12 @@ export default function AdminResourcesPage() {
 
                   {activeTab !== "trashed" ? (
                     <>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEditingResource(item);
-                          setIsModalOpen(true);
-                        }}
+                      <Link
+                        href={`/admin/resources/${item.id}/edit`}
                         className="btn btn-secondary text-xs px-3 py-1.5 cursor-pointer"
                       >
                         Edit
-                      </button>
+                      </Link>
                       <button
                         type="button"
                         disabled={isActing}

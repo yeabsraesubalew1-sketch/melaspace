@@ -19,13 +19,13 @@ function formatBytes(bytes: number): string {
 }
 
 const COMMON_CATEGORIES = [
-  "Clarity & Reflection",
-  "Emotional Health",
-  "Productivity & Work",
-  "Guided Workbooks",
-  "Cheatsheets & Templates",
-  "Audio & Decks",
   "General Resources",
+  "Audio & Decks",
+  "Cheatsheets & Templates",
+  "Guided Workbooks",
+  "Productivity & Work",
+  "Emotional Health",
+  "Clarity & Reflection",
 ];
 
 export default function ResourceModal({

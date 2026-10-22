@@ -193,6 +193,8 @@ export default async function BlogPage({ params }: Props) {
       })
     : null;
 
+  const hasToc = toc && toc.length > 0;
+
   return (
     <main data-no-grid-bg="true" className="px-4 sm:px-6 py-16 sm:py-20">
       {/* View counter tracker */}
@@ -206,15 +208,17 @@ export default async function BlogPage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(blogBreadcrumbJsonLd) }}
       />
-      <div className="mx-auto max-w-6xl">
-        <div className="flex flex-col gap-10 lg:flex-row lg:items-start">
-          <aside className="order-2 w-full lg:order-1 lg:w-72 lg:sticky lg:top-24 lg:self-start">
-            <div className="rounded-xl border border-border/70 bg-background/85 p-4 shadow-sm sm:p-5">
-              <TableOfContents toc={toc} />
-            </div>
-          </aside>
+      <div className={`mx-auto ${hasToc ? "max-w-6xl" : "max-w-3xl"}`}>
+        <div className={hasToc ? "flex flex-col gap-10 lg:flex-row lg:items-start" : ""}>
+          {hasToc && (
+            <aside className="order-2 w-full lg:order-1 lg:w-72 lg:sticky lg:top-24 lg:self-start">
+              <div className="rounded-xl border border-border/70 bg-background/85 p-4 shadow-sm sm:p-5">
+                <TableOfContents toc={toc} />
+              </div>
+            </aside>
+          )}
 
-          <article className="order-1 min-w-0 flex-1 max-w-3xl lg:order-2">
+          <article className={`min-w-0 ${hasToc ? "order-1 flex-1 max-w-3xl lg:order-2" : "w-full"}`}>
             {blog.featuredImage?.url ? (
               <header className="relative mb-10 overflow-hidden rounded-2xl border border-border/80 shadow-md">
                 {/* Background Image & Multi-Stop Dark Scrim */}

@@ -72,9 +72,6 @@ export default function LinkedResourcesModule({ resources }: { resources?: Resou
               {resources.length} {resources.length === 1 ? "Item" : "Items"}
             </span>
           </div>
-          <p className="text-xs sm:text-sm text-foreground/60">
-            Downloadable workbooks, companion templates, and toolkits curated for this article.
-          </p>
         </div>
 
         <Link

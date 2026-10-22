@@ -138,7 +138,7 @@ export default async function SingleResourcePage({ params }: Props) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(digitalDocumentJsonLd) }}
       />
 
-      <div className="max-w-5xl mx-auto pt-24 sm:pt-28 pb-20 px-4 sm:px-6 space-y-10">
+      <div className="max-w-6xl mx-auto pt-24 sm:pt-28 pb-20 px-4 sm:px-6 space-y-10">
         {/* Breadcrumbs */}
         <nav className="flex items-center gap-2 text-xs text-foreground/50">
           <Link href="/" className="hover:text-foreground transition-colors">
@@ -256,22 +256,22 @@ export default async function SingleResourcePage({ params }: Props) {
               </div>
 
               {/* Individual Files list */}
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {files.map((file, idx) => {
                   const badgeStyle = getFormatBadgeColor(file.extension);
                   return (
                     <div
                       key={file.fileVaultId || idx}
-                      className="rounded-xl border border-border bg-surface/50 p-3.5 space-y-2.5 transition hover:border-foreground/30"
+                      className="rounded-xl border border-border bg-surface/50 p-4 space-y-3 transition hover:border-foreground/30 shadow-2xs"
                     >
                       <div className="flex items-start justify-between gap-2">
-                        <div className="space-y-0.5 truncate">
+                        <div className="space-y-1 truncate">
                           <span
-                            className={`inline-block px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider border mb-1 ${badgeStyle.bg} ${badgeStyle.text} ${badgeStyle.border}`}
+                            className={`inline-block px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider border mb-0.5 ${badgeStyle.bg} ${badgeStyle.text} ${badgeStyle.border}`}
                           >
                             {file.extension.toUpperCase()}
                           </span>
-                          <p className="font-semibold text-xs text-foreground truncate">
+                          <p className="font-semibold text-sm text-foreground truncate">
                             {file.label || file.originalName}
                           </p>
                           <p className="text-[11px] text-foreground/50 truncate">
@@ -290,13 +290,6 @@ export default async function SingleResourcePage({ params }: Props) {
                     </div>
                   );
                 })}
-              </div>
-
-              <div className="pt-2 text-center text-[11px] text-foreground/45 flex items-center justify-center gap-1.5">
-                <svg className="h-3.5 w-3.5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
-                <span>Verified safe & malware scanned by FileVault</span>
               </div>
             </div>
           </div>

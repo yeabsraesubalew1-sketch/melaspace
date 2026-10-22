@@ -81,8 +81,14 @@ const rawNavSections: NavSection[] = [
     requiredRoles: ["root_admin", "super_admin", "manager"],
     items: [
       {
-        label: "Resource Hub",
+        label: "All Resources",
         href: "/admin/resources",
+        exact: true,
+      },
+      {
+        label: "New Resource",
+        href: "/admin/resources/new",
+        indent: true,
       },
     ],
   },
