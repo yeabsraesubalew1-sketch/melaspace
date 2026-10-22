@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { warmFileVaultConnection } from "@/lib/filevault";
 import ResourceEditor from "@/components/admin/ResourceEditor";
 
 const ALLOWED_ADMIN_ROLES = ["root_admin", "super_admin", "manager"];
@@ -13,6 +14,9 @@ export default async function NewResourcePage() {
   if (!userRole || !ALLOWED_ADMIN_ROLES.includes(userRole)) {
     redirect("/admin/blogs");
   }
+
+  // Pre-warm FileVault TLS connection on the server
+  warmFileVaultConnection();
 
   return (
     <div className="mx-auto max-w-4xl space-y-6 py-6 pb-16">

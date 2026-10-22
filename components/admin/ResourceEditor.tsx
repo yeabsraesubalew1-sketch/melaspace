@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import type { ResourceFileItem, ResourceCoverImageItem } from "@/types/api";
-import { warmFileVaultConnection } from "@/lib/filevault";
 
 export const COMMON_CATEGORIES = [
   "General Resources",
@@ -58,11 +57,6 @@ export default function ResourceEditor({ mode, resourceId }: ResourceEditorProps
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
-
-  // Warm TLS connection to FileVault immediately on page mount
-  useEffect(() => {
-    warmFileVaultConnection();
-  }, []);
 
   // Load resource details if in edit mode
   useEffect(() => {
