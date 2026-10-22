@@ -102,6 +102,7 @@ export async function GET(
           },
       isAnonymous,
       isBookmarked,
+      featuredImage: blog.featuredImage,
     };
 
     return NextResponse.json<ApiResponse<BlogFull>>({

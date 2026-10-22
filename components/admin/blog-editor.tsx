@@ -6,7 +6,9 @@ import { useSession } from "next-auth/react";
 import toast from "react-hot-toast";
 import Editor from "./Editor";
 import CategorySelector from "./category-selector";
+import FeaturedImageUploader from "./FeaturedImageUploader";
 import type { OutputData } from "@editorjs/editorjs";
+import type { FeaturedImage } from "@/types/api";
 
 type BlogCategory = {
   _id: string;
@@ -42,6 +44,7 @@ export default function BlogEditor({ mode, blogId }: BlogEditorProps) {
   const [title, setTitle] = useState(() => (mode === "create" ? searchParams.get("title") || "" : ""));
   const [excerpt, setExcerpt] = useState(() => (mode === "create" ? searchParams.get("excerpt") || "" : ""));
   const [content, setContent] = useState<OutputData>({ blocks: [] });
+  const [featuredImage, setFeaturedImage] = useState<FeaturedImage | null>(null);
   const [categories, setCategories] = useState<string[]>([]);
   const [isPinned, setIsPinned] = useState(false);
   const [isAnonymous, setIsAnonymous] = useState(false);
@@ -62,6 +65,7 @@ export default function BlogEditor({ mode, blogId }: BlogEditorProps) {
       title: "",
       excerpt: "",
       content: { blocks: [] },
+      featuredImage: null,
       categories: [],
       isPinned: false,
       isAnonymous: false,
@@ -87,11 +91,12 @@ export default function BlogEditor({ mode, blogId }: BlogEditorProps) {
         title: title.trim(),
         excerpt: excerpt.trim(),
         content,
+        featuredImage: featuredImage ? featuredImage.url : null,
         categories: [...categories].sort(),
         isPinned,
         isAnonymous,
       }),
-    [title, excerpt, content, categories, isPinned, isAnonymous]
+    [title, excerpt, content, featuredImage, categories, isPinned, isAnonymous]
   );
 
   const hasUnsavedChanges = currentSnapshot !== lastSavedSnapshot;
@@ -265,6 +270,7 @@ export default function BlogEditor({ mode, blogId }: BlogEditorProps) {
         setTitle(blog.title || "");
         setExcerpt(blog.excerpt || "");
         setContent(blog.content || { blocks: [] });
+        setFeaturedImage(blog.featuredImage || null);
         setIsPinned(Boolean(blog.isPinned));
         setIsAnonymous(Boolean(blog.isAnonymous));
         setCategories(
@@ -281,6 +287,7 @@ export default function BlogEditor({ mode, blogId }: BlogEditorProps) {
             title: normalizedTitle,
             excerpt: normalizedExcerpt,
             content: blog.content,
+            featuredImage: blog.featuredImage ? blog.featuredImage.url : null,
             categories: normalizedCategoryIds,
             isPinned: Boolean(blog.isPinned),
             isAnonymous: Boolean(blog.isAnonymous),
@@ -326,6 +333,7 @@ export default function BlogEditor({ mode, blogId }: BlogEditorProps) {
         excerpt: excerpt.trim() || undefined,
         content,
         categories,
+        featuredImage,
         isPinned: publish ? isPinned : false,
         isAnonymous,
         status: publish ? "published" : "draft",
@@ -451,6 +459,14 @@ export default function BlogEditor({ mode, blogId }: BlogEditorProps) {
           </div>
         </div>
       </div>
+
+      {/* Featured Image */}
+      <FeaturedImageUploader
+        value={featuredImage}
+        onChange={setFeaturedImage}
+        title={title}
+        disabled={saving}
+      />
 
       {/* EditorJS Article Body */}
       <div className="space-y-2">

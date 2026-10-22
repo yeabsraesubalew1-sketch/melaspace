@@ -8,11 +8,14 @@ import {
   getFileVaultApiKeyForRole,
   ADMIN_ROLES,
 } from "@/lib/filevault";
+import { normalizeMediaUrl } from "@/lib/media";
 
 const EXPLORER_MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB
 const ADMIN_MAX_FILE_SIZE = 1024 * 1024 * 1024; // 1 GB (approx 1073741824 bytes)
 const EXPLORER_MAX_IMAGES_PER_PROPOSAL = 3;
 const EXPLORER_MAX_FILES_PER_PROPOSAL = 3;
+
+export const maxDuration = 300; // 5 minutes for large uploads
 
 export async function POST(req: Request) {
   try {
@@ -59,7 +62,8 @@ export async function POST(req: Request) {
     await connectDB();
 
     // 2. Explorer Cap Verification (Max 3 Images, Max 3 Files per proposal)
-    if (!isAdmin) {
+    // NOTE: 'featured_image' is exempt from the 3-image cap per proposal.
+    if (!isAdmin && (assetType === "image" || assetType === "file")) {
       const clientCount = clientCountRaw ? parseInt(clientCountRaw, 10) : 0;
       const maxAllowed =
         assetType === "image"
@@ -132,6 +136,7 @@ export async function POST(req: Request) {
     });
 
     const downloadUrl = `/api/uploads/download/${fileVaultRecord.id}`;
+    const isImageLike = assetType === "image" || assetType === "featured_image";
 
     return NextResponse.json(
       {
@@ -139,7 +144,7 @@ export async function POST(req: Request) {
         file: {
           id: fileVaultRecord.id,
           assetId: uploadedAsset._id.toString(),
-          url: assetType === "image" ? fileVaultRecord.url : downloadUrl,
+          url: isImageLike ? normalizeMediaUrl(fileVaultRecord.url) : downloadUrl,
           downloadUrl,
           directUrl: fileVaultRecord.url,
           storage_key: fileVaultRecord.storage_key,
@@ -159,9 +164,21 @@ export async function POST(req: Request) {
   } catch (error: unknown) {
     console.error("POST /api/uploads error:", error);
 
-    const message = error instanceof Error ? error.message : "Upload failed";
-    const status = (error as { status?: number })?.status || 500;
-    const code = (error as { code?: string })?.code || "STORAGE_ERROR";
+    const errorCode =
+      (error as { code?: string })?.code ||
+      (error as { cause?: { code?: string } })?.cause?.code;
+
+    const isConnectTimeout =
+      errorCode === "UND_ERR_CONNECT_TIMEOUT" || errorCode === "ETIMEDOUT";
+
+    const message = isConnectTimeout
+      ? "Connection to storage server timed out. Please check network connection or retry."
+      : error instanceof Error
+      ? error.message
+      : "Upload failed";
+
+    const status = (error as { status?: number })?.status || (isConnectTimeout ? 504 : 500);
+    const code = isConnectTimeout ? "STORAGE_TIMEOUT" : errorCode || "STORAGE_ERROR";
 
     return NextResponse.json(
       {

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import toast from "react-hot-toast";
 import Renderer from "@/components/editorjs/Renderer";
 import type { EditorContent } from "@/types/editor";
+import { normalizeMediaUrl } from "@/lib/media";
 
 interface ProposalDoc {
   _id: string;
@@ -35,6 +36,11 @@ interface ProposalDoc {
   };
   reviewedAt?: string;
   createdAt: string;
+  featuredImage?: {
+    url: string;
+    alt?: string;
+    caption?: string;
+  };
 }
 
 export default function AdminProposalsPage() {
@@ -280,6 +286,23 @@ export default function AdminProposalsPage() {
                     <p className="text-xs text-foreground/60 italic mt-1">
                       Summary: {prop.excerpt}
                     </p>
+                  )}
+
+                  {/* Featured Cover Image if present */}
+                  {prop.featuredImage?.url && (
+                    <div className="relative mt-3 aspect-[21/9] max-h-48 w-full overflow-hidden rounded-lg border border-border/60 bg-surface-muted">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={normalizeMediaUrl(prop.featuredImage.url)}
+                        alt={prop.featuredImage.alt || prop.title}
+                        className="h-full w-full object-cover"
+                      />
+                      {prop.featuredImage.caption && (
+                        <div className="absolute bottom-0 inset-x-0 bg-background/80 backdrop-blur-xs px-3 py-1 text-[11px] text-foreground/70 italic border-t border-border/40 truncate">
+                          {prop.featuredImage.caption}
+                        </div>
+                      )}
+                    </div>
                   )}
 
                   {/* Render Editor.js or Text content */}

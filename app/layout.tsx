@@ -50,6 +50,10 @@ export default function RootLayout({
 }) {
 	return (
 		<html lang="en">
+			<head>
+				<link rel="preconnect" href="https://website-973c67d0.zvl.obd.mybluehost.me" crossOrigin="anonymous" />
+				<link rel="dns-prefetch" href="https://website-973c67d0.zvl.obd.mybluehost.me" />
+			</head>
 			<body className={`${manrope.className} ${cormorant.variable} min-h-screen bg-background text-foreground`}>
 				<AuthProvider>
 					<Toaster position="top-center" />

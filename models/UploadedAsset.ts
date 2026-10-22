@@ -1,7 +1,7 @@
 import mongoose, { Schema, Model, models } from "mongoose";
 import "@/models/User";
 
-export type AssetType = "image" | "file";
+export type AssetType = "image" | "file" | "featured_image";
 export type AssetStatus = "temp" | "attached" | "trashed";
 export type EntityType = "blog" | "proposal";
 
@@ -53,7 +53,7 @@ const UploadedAssetSchema = new Schema<UploadedAssetDocument>(
     },
     assetType: {
       type: String,
-      enum: ["image", "file"],
+      enum: ["image", "file", "featured_image"],
       required: true,
       index: true,
     },

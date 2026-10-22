@@ -1,5 +1,6 @@
 import mongoose, { Schema, Model, models } from "mongoose";
 import type { EditorContent } from "@/types/editor";
+import type { FeaturedImage } from "@/types/api";
 import "@/models/User";
 import "@/models/Blog";
 
@@ -14,6 +15,7 @@ export interface ProposalDocument extends mongoose.Document {
   suggestedCategories: string[];
   status: ProposalStatus;
   type: ProposalType;
+  featuredImage?: FeaturedImage;
   targetBlogId?: mongoose.Types.ObjectId;
   adminFeedback?: string;
   isAnonymous?: boolean;
@@ -67,6 +69,13 @@ const ProposalSchema = new Schema<ProposalDocument>(
     targetBlogId: {
       type: Schema.Types.ObjectId,
       ref: "Blog",
+    },
+    featuredImage: {
+      url: { type: String, trim: true },
+      alt: { type: String, trim: true },
+      caption: { type: String, trim: true },
+      fileVaultId: { type: Number },
+      storageKey: { type: String, trim: true },
     },
     isAnonymous: {
       type: Boolean,

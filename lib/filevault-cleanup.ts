@@ -45,7 +45,8 @@ export async function syncEntityAssets(
   entityType: EntityType,
   entityId: string | Types.ObjectId,
   blocks: unknown,
-  userRole?: string
+  userRole?: string,
+  extraFileVaultIds: (number | undefined | null)[] = []
 ): Promise<{ attachedCount: number; trashedCount: number }> {
   try {
     await connectDB();
@@ -55,7 +56,12 @@ export async function syncEntityAssets(
         ? new Types.ObjectId(entityId)
         : (entityId as Types.ObjectId);
 
-    const activeFileVaultIds = extractFileVaultIdsFromBlocks(blocks);
+    const validExtraIds = extraFileVaultIds.filter(
+      (id): id is number => typeof id === "number" && id > 0
+    );
+    const activeFileVaultIds = Array.from(
+      new Set([...extractFileVaultIdsFromBlocks(blocks), ...validExtraIds])
+    );
     const apiKey = getFileVaultApiKeyForRole(userRole);
 
     // 1. Mark currently used assets as attached to this entity

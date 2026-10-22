@@ -1,4 +1,5 @@
 import type { ImageBlock as ImageBlockType } from "../types";
+import { normalizeMediaUrl } from "@/lib/media";
 
 interface Props {
   block: ImageBlockType;
@@ -18,6 +19,8 @@ export default function ImageBlock({ block, blogTitle }: Props) {
   } = block.data;
 
   if (!url) return null;
+
+  const normalizedUrl = normalizeMediaUrl(url);
 
   // Alt text priority: Caption -> Blog Title -> Original Filename -> Fallback
   const cleanCaption = caption ? caption.replace(/<[^>]+>/g, "").trim() : "";
@@ -44,7 +47,7 @@ export default function ImageBlock({ block, blogTitle }: Props) {
       <div className="relative overflow-hidden rounded-lg">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={url}
+          src={normalizedUrl}
           alt={altText}
           loading="lazy"
           className="w-full h-auto object-contain max-h-[640px] mx-auto rounded-lg"

@@ -71,6 +71,13 @@ export async function GET(req: Request) {
       author?: { toString(): string };
       authorName?: string;
       isAnonymous?: boolean;
+      featuredImage?: {
+        url: string;
+        alt?: string;
+        caption?: string;
+        fileVaultId?: number;
+        storageKey?: string;
+      };
     }
 
     const mapPreview = (blog: BlogLean): BlogPreview => ({
@@ -90,6 +97,7 @@ export async function GET(req: Request) {
       authorId: blog.author ? blog.author.toString() : undefined,
       authorName: blog.authorName || "Mela Team",
       isAnonymous: Boolean(blog.isAnonymous),
+      featuredImage: blog.featuredImage,
     });
 
     if (status) {
@@ -213,6 +221,7 @@ export async function POST(req: Request) {
       excerpt: customExcerpt,
       isPinned = false,
       isAnonymous = false,
+      featuredImage,
     } = body;
 
     if (!title || !content) {
@@ -328,6 +337,16 @@ export async function POST(req: Request) {
       status,
       isPinned: shouldPin,
       isAnonymous: Boolean(isAnonymous),
+      featuredImage:
+        featuredImage && typeof featuredImage === "object" && featuredImage.url
+          ? {
+              url: String(featuredImage.url).trim(),
+              alt: featuredImage.alt ? String(featuredImage.alt).trim() : undefined,
+              caption: featuredImage.caption ? String(featuredImage.caption).trim() : undefined,
+              fileVaultId: featuredImage.fileVaultId ? Number(featuredImage.fileVaultId) : undefined,
+              storageKey: featuredImage.storageKey ? String(featuredImage.storageKey).trim() : undefined,
+            }
+          : undefined,
       author: session.user.id ? new Types.ObjectId(session.user.id) : undefined,
       authorName: isAnonymous ? "Mela Team" : (session.user.name || "Mela Team"),
       publishedAt: status === "published" ? new Date() : undefined,
@@ -340,7 +359,8 @@ export async function POST(req: Request) {
       Array.isArray((content as { blocks?: unknown[] }).blocks)
         ? (content as { blocks: unknown[] }).blocks
         : [];
-    await syncEntityAssets("blog", blog._id, blocks, userRole);
+    const extraAssetIds = blog.featuredImage?.fileVaultId ? [blog.featuredImage.fileVaultId] : [];
+    await syncEntityAssets("blog", blog._id, blocks, userRole, extraAssetIds);
 
     return NextResponse.json<ApiResponse<{ id: string }>>(
       {

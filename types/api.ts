@@ -26,6 +26,14 @@ export interface BlogAuthorPreview {
   avatar?: string;
 }
 
+export interface FeaturedImage {
+  url: string;
+  alt?: string;
+  caption?: string;
+  fileVaultId?: number;
+  storageKey?: string;
+}
+
 /**
  * Lightweight blog shape for lists, search, previews.
  */
@@ -44,6 +52,7 @@ export interface BlogPreview {
   authorName?: string;
   isAnonymous?: boolean;
   isBookmarked?: boolean;
+  featuredImage?: FeaturedImage;
 }
 
 /**

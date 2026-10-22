@@ -101,7 +101,7 @@ export async function PUT(
         );
       }
 
-      const { title, excerpt, content, suggestedCategories, isAnonymous } = body;
+      const { title, excerpt, content, suggestedCategories, isAnonymous, featuredImage } = body;
 
       if (title !== undefined) {
         if (typeof title !== "string" || title.trim().length === 0) {
@@ -116,6 +116,20 @@ export async function PUT(
 
       if (typeof isAnonymous === "boolean") {
         proposal.isAnonymous = isAnonymous;
+      }
+
+      if (featuredImage !== undefined) {
+        if (featuredImage && typeof featuredImage === "object" && featuredImage.url) {
+          proposal.featuredImage = {
+            url: String(featuredImage.url).trim(),
+            alt: featuredImage.alt ? String(featuredImage.alt).trim() : undefined,
+            caption: featuredImage.caption ? String(featuredImage.caption).trim() : undefined,
+            fileVaultId: featuredImage.fileVaultId ? Number(featuredImage.fileVaultId) : undefined,
+            storageKey: featuredImage.storageKey ? String(featuredImage.storageKey).trim() : undefined,
+          };
+        } else {
+          proposal.featuredImage = undefined;
+        }
       }
 
       if (content !== undefined) {
@@ -169,7 +183,8 @@ export async function PUT(
         Array.isArray((proposal.content as { blocks?: unknown[] }).blocks)
           ? (proposal.content as { blocks: unknown[] }).blocks
           : [];
-      await syncEntityAssets("proposal", proposal._id, userBlocks, auth.session.user.role);
+      const userExtraAssetIds = proposal.featuredImage?.fileVaultId ? [proposal.featuredImage.fileVaultId] : [];
+      await syncEntityAssets("proposal", proposal._id, userBlocks, auth.session.user.role, userExtraAssetIds);
 
       return NextResponse.json({
         success: true,
@@ -181,7 +196,7 @@ export async function PUT(
     // ----------------------------------------------------
     // Caller is admin: review, status change, approve / reject
     // ----------------------------------------------------
-    const { status, adminFeedback, title, excerpt, content, suggestedCategories, isAnonymous } = body;
+    const { status, adminFeedback, title, excerpt, content, suggestedCategories, isAnonymous, featuredImage } = body;
 
     if (title && typeof title === "string") proposal.title = title.trim();
     if (excerpt !== undefined) proposal.excerpt = typeof excerpt === "string" ? excerpt.trim().slice(0, 300) : "";
@@ -190,6 +205,19 @@ export async function PUT(
     }
     if (typeof isAnonymous === "boolean") {
       proposal.isAnonymous = isAnonymous;
+    }
+    if (featuredImage !== undefined) {
+      if (featuredImage && typeof featuredImage === "object" && featuredImage.url) {
+        proposal.featuredImage = {
+          url: String(featuredImage.url).trim(),
+          alt: featuredImage.alt ? String(featuredImage.alt).trim() : undefined,
+          caption: featuredImage.caption ? String(featuredImage.caption).trim() : undefined,
+          fileVaultId: featuredImage.fileVaultId ? Number(featuredImage.fileVaultId) : undefined,
+          storageKey: featuredImage.storageKey ? String(featuredImage.storageKey).trim() : undefined,
+        };
+      } else {
+        proposal.featuredImage = undefined;
+      }
     }
     if (adminFeedback !== undefined) {
       proposal.adminFeedback = typeof adminFeedback === "string" ? adminFeedback.trim().slice(0, 500) : "";
@@ -300,6 +328,9 @@ export async function PUT(
             existingBlog.categories = categoryIds;
             existingBlog.isAnonymous = Boolean(proposal.isAnonymous);
             existingBlog.authorName = authorName;
+            if (proposal.featuredImage) {
+              existingBlog.featuredImage = proposal.featuredImage;
+            }
             existingBlog.lastEditedBy = new Types.ObjectId(auth.session.user.id);
             await existingBlog.save();
 
@@ -318,6 +349,9 @@ export async function PUT(
               existingBlog.categories = categoryIds;
               existingBlog.isAnonymous = Boolean(proposal.isAnonymous);
               existingBlog.authorName = authorName;
+              if (proposal.featuredImage) {
+                existingBlog.featuredImage = proposal.featuredImage;
+              }
               existingBlog.status = "published";
               existingBlog.publishedAt = existingBlog.publishedAt || new Date();
               existingBlog.lastEditedBy = new Types.ObjectId(auth.session.user.id);
@@ -333,6 +367,7 @@ export async function PUT(
               excerpt: calculatedExcerpt,
               content: blogContent as unknown as EditorContent,
               categories: categoryIds,
+              featuredImage: proposal.featuredImage,
               author: proposal.userId,
               authorName,
               isAnonymous: Boolean(proposal.isAnonymous),
@@ -366,10 +401,11 @@ export async function PUT(
       Array.isArray((proposal.content as { blocks?: unknown[] }).blocks)
         ? (proposal.content as { blocks: unknown[] }).blocks
         : [];
-    await syncEntityAssets("proposal", proposal._id, adminBlocks, auth.session.user.role);
+    const adminExtraAssetIds = proposal.featuredImage?.fileVaultId ? [proposal.featuredImage.fileVaultId] : [];
+    await syncEntityAssets("proposal", proposal._id, adminBlocks, auth.session.user.role, adminExtraAssetIds);
 
     if (proposal.status === "approved" && proposal.blogId) {
-      await syncEntityAssets("blog", proposal.blogId, adminBlocks, "root_admin");
+      await syncEntityAssets("blog", proposal.blogId, adminBlocks, "root_admin", adminExtraAssetIds);
     }
 
     // Populate for clean client return

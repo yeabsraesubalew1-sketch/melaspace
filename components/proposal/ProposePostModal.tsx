@@ -5,6 +5,9 @@ import toast from "react-hot-toast";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import type { OutputData } from "@editorjs/editorjs";
+import FeaturedImageUploader from "@/components/admin/FeaturedImageUploader";
+import type { FeaturedImage } from "@/types/api";
+import { normalizeMediaUrl } from "@/lib/media";
 
 const Editor = dynamic(() => import("@/components/admin/Editor"), {
   ssr: false,
@@ -29,6 +32,7 @@ interface ProposalItem {
   suggestedCategories: string[];
   status: "pending" | "approved" | "rejected";
   type?: "new" | "revision";
+  featuredImage?: FeaturedImage;
   targetBlogId?: {
     _id?: string;
     title?: string;
@@ -64,6 +68,7 @@ export default function ProposePostModal({
   const [customCategoryInput, setCustomCategoryInput] = useState("");
   const [categories, setCategories] = useState<string[]>([]);
   const [approvedCategories, setApprovedCategories] = useState<ApprovedCategory[]>([]);
+  const [featuredImage, setFeaturedImage] = useState<FeaturedImage | null>(null);
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -169,6 +174,7 @@ export default function ProposePostModal({
     setTitle("");
     setExcerpt("");
     setContent({ blocks: [] });
+    setFeaturedImage(null);
     setCategories([]);
     setIsAnonymous(false);
   };
@@ -187,6 +193,7 @@ export default function ProposePostModal({
 
     setTitle(prop.title);
     setExcerpt(prop.excerpt || "");
+    setFeaturedImage(prop.featuredImage || null);
     setIsAnonymous(Boolean(prop.isAnonymous));
 
     if (typeof prop.content === "object" && prop.content !== null && "blocks" in prop.content) {
@@ -226,6 +233,7 @@ export default function ProposePostModal({
 
     setTitle(prop.title);
     setExcerpt(prop.excerpt || "");
+    setFeaturedImage(prop.featuredImage || null);
     setIsAnonymous(Boolean(prop.isAnonymous));
 
     if (typeof prop.content === "object" && prop.content !== null && "blocks" in prop.content) {
@@ -252,6 +260,7 @@ export default function ProposePostModal({
 
     setTitle(prop.title);
     setExcerpt(prop.excerpt || "");
+    setFeaturedImage(prop.featuredImage || null);
     setIsAnonymous(Boolean(prop.isAnonymous));
 
     if (typeof prop.content === "object" && prop.content !== null && "blocks" in prop.content) {
@@ -332,6 +341,7 @@ export default function ProposePostModal({
         excerpt: excerpt.trim() || undefined,
         content,
         suggestedCategories: categories,
+        featuredImage: featuredImage || undefined,
         isAnonymous,
       };
 
@@ -648,6 +658,14 @@ export default function ProposePostModal({
                   </div>
                 )}
               </div>
+
+              {/* Featured Image */}
+              <FeaturedImageUploader
+                value={featuredImage}
+                onChange={setFeaturedImage}
+                title={title}
+                disabled={isSubmitting}
+              />
 
               {/* EditorJS Canvas */}
               <div className="space-y-2">
@@ -971,6 +989,17 @@ export default function ProposePostModal({
                         )}
                       </div>
                     </div>
+
+                    {prop.featuredImage?.url && (
+                      <div className="relative aspect-[21/9] max-h-36 w-full overflow-hidden rounded-lg border border-border/50 bg-surface-muted">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={normalizeMediaUrl(prop.featuredImage.url)}
+                          alt={prop.featuredImage.alt || prop.title}
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                    )}
 
                     <h4 className="font-semibold text-sm sm:text-base text-foreground leading-snug">
                       {prop.title}

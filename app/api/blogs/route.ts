@@ -32,6 +32,11 @@ interface PublicBlogPreview {
   isPinned?: boolean;
   views?: number;
   authorName?: string;
+  featuredImage?: {
+    url: string;
+    alt?: string;
+    caption?: string;
+  };
 }
 
 interface PopulatedCategoryDoc {
@@ -102,7 +107,7 @@ const total = await Blog.countDocuments(filter);
       .sort({ isPinned: -1, publishedAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit)
-      .select("title slug excerpt categories publishedAt isPinned views author authorName isAnonymous")
+      .select("title slug excerpt categories publishedAt isPinned views author authorName isAnonymous featuredImage")
       .populate("categories", "_id name slug")
       .populate("author", "role")
       .lean();
@@ -130,6 +135,13 @@ const total = await Blog.countDocuments(filter);
         isPinned: Boolean(b.isPinned),
         views: b.views ?? 0,
         authorName,
+        featuredImage: b.featuredImage?.url
+          ? {
+              url: b.featuredImage.url,
+              alt: b.featuredImage.alt,
+              caption: b.featuredImage.caption,
+            }
+          : undefined,
       };
     });
 

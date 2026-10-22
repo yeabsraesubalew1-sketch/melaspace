@@ -15,6 +15,8 @@ interface Params {
   id: string;
 }
 
+export const maxDuration = 300; // 5 minutes for downloading large files
+
 export async function GET(
   _req: Request,
   { params }: { params: Promise<Params> }
@@ -119,7 +121,7 @@ export async function GET(
       headers.set("Cache-Control", "private, no-cache, no-store, must-revalidate");
     }
 
-    return new Response(streamResponse.body, {
+    return new Response(streamResponse.body as unknown as BodyInit, {
       status: 200,
       headers,
     });

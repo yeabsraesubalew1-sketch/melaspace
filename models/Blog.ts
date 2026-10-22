@@ -1,5 +1,6 @@
 import mongoose, { Schema, Model } from "mongoose";
 import type { EditorContent } from "@/types/editor";
+import type { FeaturedImage } from "@/types/api";
 import "@/models/Category";
 import "@/models/User";
 
@@ -11,6 +12,7 @@ export interface BlogDocument extends mongoose.Document {
   categories: mongoose.Types.ObjectId[];
   status: "draft" | "published";
   publishedAt?: Date;
+  featuredImage?: FeaturedImage;
   author?: mongoose.Types.ObjectId;
   authorName?: string;
   isAnonymous?: boolean;
@@ -101,6 +103,14 @@ const BlogSchema = new Schema<BlogDocument>(
 
     publishedAt: {
       type: Date,
+    },
+
+    featuredImage: {
+      url: { type: String, trim: true },
+      alt: { type: String, trim: true },
+      caption: { type: String, trim: true },
+      fileVaultId: { type: Number },
+      storageKey: { type: String, trim: true },
     },
   },
   {

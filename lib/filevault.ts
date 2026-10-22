@@ -1,6 +1,13 @@
 import { UserRole } from "@/models/User";
+import {
+  Agent,
+  fetch as undiciFetch,
+  FormData as UndiciFormData,
+  RequestInit as UndiciRequestInit,
+  Response as UndiciResponse,
+} from "undici";
 
-const FILEVAULT_URL = (process.env.FILEVAULT_URL || "http://localhost:8000").replace(/\/+$/, "");
+export const FILEVAULT_URL = (process.env.FILEVAULT_URL || "http://localhost:8000").replace(/\/+$/, "");
 const FILEVAULT_ADMIN_KEY = process.env.FILEVAULT_API_KEY || "";
 const FILEVAULT_PUBLIC_KEY = process.env.FILEVAULT_API_KEY_PUBLIC || "";
 
@@ -41,6 +48,109 @@ export interface FileVaultErrorResponse {
 }
 
 /**
+ * Custom Undici Agent for FileVault with resilient timeouts and keep-alive socket reuse.
+ * - connect timeout: 60s (prevents UND_ERR_CONNECT_TIMEOUT on Bluehost SSL handshakes)
+ * - headers / body timeout: 10 minutes (handles large uploads up to 1GB)
+ * - keepAlive: reuses TCP & TLS connections for fast subsequent requests
+ */
+const fileVaultAgent = new Agent({
+  connect: {
+    timeout: 60_000,
+  },
+  headersTimeout: 600_000,
+  bodyTimeout: 600_000,
+  keepAliveTimeout: 60_000,
+  keepAliveMaxTimeout: 300_000,
+});
+
+/**
+ * Bluehost shared hosting Anti-Bot protection cookie cache.
+ * Bluehost serves a JS challenge if the cookie is missing, causing connection stalls or 409 responses.
+ */
+let cachedCookie = process.env.FILEVAULT_COOKIE || "humans_21909=1";
+
+function extractChallengeCookie(html: string): string | null {
+  if (!html.includes("document.cookie")) return null;
+  const marker = 'document.cookie = "';
+  const start = html.indexOf(marker);
+  if (start !== -1) {
+    const valueStart = start + marker.length;
+    const end = html.indexOf('"', valueStart);
+    if (end !== -1) {
+      return html.substring(valueStart, end);
+    }
+  }
+  return null;
+}
+
+/**
+ * Resilient fetch wrapper with custom Agent, browser User-Agent, Bluehost cookie injection,
+ * and automatic retry on connection timeouts and challenge responses.
+ */
+export async function fileVaultFetch(
+  url: string,
+  options: UndiciRequestInit = {},
+  retries = 2
+): Promise<UndiciResponse> {
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const headers: Record<string, string> = {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        Accept: "application/json, text/plain, */*",
+        ...(cachedCookie ? { Cookie: cachedCookie } : {}),
+        ...((options.headers as Record<string, string>) || {}),
+      };
+
+      const res = await undiciFetch(url, {
+        ...options,
+        headers,
+        dispatcher: fileVaultAgent,
+      });
+
+      // If Bluehost serves the anti-bot script (status 409 or HTML with document.cookie),
+      // parse the challenge cookie and replay the request.
+      if (res.status === 409 && attempt < retries) {
+        const text = await res.text();
+        const extracted = extractChallengeCookie(text);
+        if (extracted) {
+          console.log(`[FILEVAULT] Extracted Bluehost challenge cookie: ${extracted}`);
+          cachedCookie = extracted;
+          await new Promise((r) => setTimeout(r, 500));
+          continue;
+        }
+      }
+
+      return res;
+    } catch (err: unknown) {
+      lastError = err;
+      const errorCode =
+        (err as { code?: string })?.code ||
+        (err as { cause?: { code?: string } })?.cause?.code;
+
+      const isNetworkRetryable =
+        errorCode === "UND_ERR_CONNECT_TIMEOUT" ||
+        errorCode === "UND_ERR_SOCKET" ||
+        errorCode === "ECONNRESET" ||
+        errorCode === "ETIMEDOUT";
+
+      if (attempt < retries && isNetworkRetryable) {
+        console.warn(
+          `[FILEVAULT] Request to ${url} failed with ${errorCode} (attempt ${attempt + 1}/${retries + 1}). Retrying in 1.5s...`
+        );
+        await new Promise((r) => setTimeout(r, 1500));
+        continue;
+      }
+      throw err;
+    }
+  }
+
+  throw lastError;
+}
+
+/**
  * Uploads a file buffer or stream to FileVault.
  */
 export async function uploadToFileVault(
@@ -52,10 +162,10 @@ export async function uploadToFileVault(
     throw new Error("FileVault API key is not configured.");
   }
 
-  const formData = new FormData();
-  formData.append("file", fileBlob, fileName);
+  const formData = new UndiciFormData();
+  formData.append("file", fileBlob as unknown as Blob, fileName);
 
-  const res = await fetch(`${FILEVAULT_URL}/api/v1/files`, {
+  const res = await fileVaultFetch(`${FILEVAULT_URL}/api/v1/files`, {
     method: "POST",
     headers: {
       "X-Api-Key": apiKey,
@@ -63,10 +173,13 @@ export async function uploadToFileVault(
     body: formData,
   });
 
-  const data = (await res.json().catch(() => null)) as
-    | FileVaultUploadResponse
-    | FileVaultErrorResponse
-    | null;
+  const text = await res.text();
+  let data: FileVaultUploadResponse | FileVaultErrorResponse | null = null;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    // Response was not JSON
+  }
 
   if (!res.ok || !data || !("file" in data)) {
     const errorMsg =
@@ -90,7 +203,7 @@ export async function trashFileVaultFile(fileId: number, apiKey: string): Promis
   if (!apiKey || !fileId) return false;
 
   try {
-    const res = await fetch(`${FILEVAULT_URL}/api/v1/files/${fileId}`, {
+    const res = await fileVaultFetch(`${FILEVAULT_URL}/api/v1/files/${fileId}`, {
       method: "DELETE",
       headers: {
         "X-Api-Key": apiKey,
@@ -111,7 +224,7 @@ export async function purgeFileVaultFile(fileId: number, apiKey: string): Promis
   if (!apiKey || !fileId) return false;
 
   try {
-    const res = await fetch(`${FILEVAULT_URL}/api/v1/files/${fileId}/purge`, {
+    const res = await fileVaultFetch(`${FILEVAULT_URL}/api/v1/files/${fileId}/purge`, {
       method: "DELETE",
       headers: {
         "X-Api-Key": apiKey,
@@ -131,12 +244,12 @@ export async function purgeFileVaultFile(fileId: number, apiKey: string): Promis
 export async function downloadFileVaultStream(
   fileId: number,
   apiKey: string
-): Promise<Response> {
+): Promise<UndiciResponse> {
   if (!apiKey) {
     throw new Error("FileVault API key is required for authenticated download.");
   }
 
-  const res = await fetch(`${FILEVAULT_URL}/api/v1/files/${fileId}/download`, {
+  const res = await fileVaultFetch(`${FILEVAULT_URL}/api/v1/files/${fileId}/download`, {
     method: "GET",
     headers: {
       "X-Api-Key": apiKey,
@@ -144,7 +257,13 @@ export async function downloadFileVaultStream(
   });
 
   if (!res.ok) {
-    const errJson = (await res.json().catch(() => null)) as FileVaultErrorResponse | null;
+    const text = await res.text();
+    let errJson: FileVaultErrorResponse | null = null;
+    try {
+      errJson = JSON.parse(text);
+    } catch {
+      // not JSON
+    }
     const msg = errJson?.error?.message || `Download failed with HTTP ${res.status}`;
     throw new Error(msg);
   }
@@ -162,7 +281,7 @@ export async function getFileVaultMetadata(
   if (!apiKey || !fileId) return null;
 
   try {
-    const res = await fetch(`${FILEVAULT_URL}/api/v1/files/${fileId}`, {
+    const res = await fileVaultFetch(`${FILEVAULT_URL}/api/v1/files/${fileId}`, {
       method: "GET",
       headers: {
         "X-Api-Key": apiKey,
@@ -170,7 +289,8 @@ export async function getFileVaultMetadata(
     });
 
     if (!res.ok) return null;
-    const data = await res.json();
+    const text = await res.text();
+    const data = JSON.parse(text) as { file?: FileVaultFileRecord };
     return data?.file || null;
   } catch (err) {
     console.error(`[FILEVAULT] Error fetching metadata for file ${fileId}:`, err);

@@ -154,7 +154,7 @@ export async function PUT(
     await connectDB();
 
     const body = await req.json();
-    const { title, excerpt, content, categories, status, isPinned, isAnonymous } = body;
+    const { title, excerpt, content, categories, status, isPinned, isAnonymous, featuredImage } = body;
 
     const blog = await Blog.findById(id);
 
@@ -334,6 +334,20 @@ export async function PUT(
       }
     }
 
+    if (featuredImage !== undefined) {
+      if (featuredImage && typeof featuredImage === "object" && featuredImage.url) {
+        blog.featuredImage = {
+          url: String(featuredImage.url).trim(),
+          alt: featuredImage.alt ? String(featuredImage.alt).trim() : undefined,
+          caption: featuredImage.caption ? String(featuredImage.caption).trim() : undefined,
+          fileVaultId: featuredImage.fileVaultId ? Number(featuredImage.fileVaultId) : undefined,
+          storageKey: featuredImage.storageKey ? String(featuredImage.storageKey).trim() : undefined,
+        };
+      } else {
+        blog.featuredImage = undefined;
+      }
+    }
+
     await blog.save(); // schema ensures fallback category
 
     const blocks =
@@ -343,7 +357,8 @@ export async function PUT(
       Array.isArray((blog.content as { blocks?: unknown[] }).blocks)
         ? (blog.content as { blocks: unknown[] }).blocks
         : [];
-    await syncEntityAssets("blog", blog._id, blocks, userRole);
+    const extraAssetIds = blog.featuredImage?.fileVaultId ? [blog.featuredImage.fileVaultId] : [];
+    await syncEntityAssets("blog", blog._id, blocks, userRole, extraAssetIds);
 
     return NextResponse.json<ApiResponse<{ id: string }>>({
       success: true,

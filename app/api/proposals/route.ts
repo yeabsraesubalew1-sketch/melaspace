@@ -92,6 +92,7 @@ export async function POST(req: Request) {
       isAnonymous = false,
       type = "new",
       targetBlogId,
+      featuredImage,
     } = body;
 
     if (!title || typeof title !== "string" || title.trim().length === 0) {
@@ -167,13 +168,24 @@ export async function POST(req: Request) {
       suggestedCategories: cleanedCategories,
       status: "pending",
       type: type === "revision" && resolvedTargetBlogId ? "revision" : "new",
+      featuredImage:
+        featuredImage && typeof featuredImage === "object" && featuredImage.url
+          ? {
+              url: String(featuredImage.url).trim(),
+              alt: featuredImage.alt ? String(featuredImage.alt).trim() : undefined,
+              caption: featuredImage.caption ? String(featuredImage.caption).trim() : undefined,
+              fileVaultId: featuredImage.fileVaultId ? Number(featuredImage.fileVaultId) : undefined,
+              storageKey: featuredImage.storageKey ? String(featuredImage.storageKey).trim() : undefined,
+            }
+          : undefined,
       targetBlogId: resolvedTargetBlogId,
       blogId: resolvedTargetBlogId,
       blogSlug: resolvedBlogSlug,
       isAnonymous: Boolean(isAnonymous),
     });
 
-    await syncEntityAssets("proposal", proposal._id, blocks, auth.session.user.role);
+    const extraAssetIds = proposal.featuredImage?.fileVaultId ? [proposal.featuredImage.fileVaultId] : [];
+    await syncEntityAssets("proposal", proposal._id, blocks, auth.session.user.role, extraAssetIds);
 
     return NextResponse.json(
       {
