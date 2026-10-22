@@ -3,10 +3,11 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { Blog } from "@/models/Blog";
+import { Resource } from "@/models/Resource";
 import "@/models/Category";
 import "@/models/User";
 import Bookmark from "@/models/Bookmark";
-import type { ApiResponse, BlogFull } from "@/types/api";
+import type { ApiResponse, BlogFull, ResourceItem } from "@/types/api";
 
 interface Params {
   slug: string;
@@ -74,6 +75,38 @@ export async function GET(
       ? (blog.authorName === "Anonymous" || !isTeamAuthor ? "Anonymous" : "Mela Team")
       : (blog.authorName || populatedAuthor?.name || "Mela Team");
 
+    // Fetch linked resources
+    let linkedResources: ResourceItem[] = [];
+    try {
+      const resourceDocs = await Resource.find({
+        $or: [
+          { _id: { $in: blog.linkedResourceIds || [] } },
+          { linkedBlogIds: blog._id },
+        ],
+        status: "published",
+      }).lean();
+
+      linkedResources = resourceDocs.map((r) => ({
+        id: r._id.toString(),
+        title: r.title,
+        slug: r.slug,
+        excerpt: r.excerpt,
+        description: r.description,
+        category: r.category,
+        tags: r.tags || [],
+        coverImage: r.coverImage,
+        files: r.files || [],
+        downloadCount: r.downloadCount || 0,
+        status: r.status,
+        authorName: r.authorName || "Mela Team",
+        linkedBlogIds: r.linkedBlogIds?.map((id) => id.toString()) || [],
+        createdAt: r.createdAt.toISOString(),
+        updatedAt: r.updatedAt.toISOString(),
+      }));
+    } catch (resourceErr) {
+      console.error("Failed to populate linked resources:", resourceErr);
+    }
+
     const response: BlogFull = {
       id: blog._id.toString(),
       title: blog.title,
@@ -103,6 +136,8 @@ export async function GET(
       isAnonymous,
       isBookmarked,
       featuredImage: blog.featuredImage,
+      linkedResourceIds: (blog.linkedResourceIds || []).map((id: { toString(): string }) => id.toString()),
+      linkedResources,
     };
 
     return NextResponse.json<ApiResponse<BlogFull>>({

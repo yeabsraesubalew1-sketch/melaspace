@@ -13,6 +13,7 @@ export interface BlogDocument extends mongoose.Document {
   status: "draft" | "published";
   publishedAt?: Date;
   featuredImage?: FeaturedImage;
+  linkedResourceIds?: mongoose.Types.ObjectId[];
   author?: mongoose.Types.ObjectId;
   authorName?: string;
   isAnonymous?: boolean;
@@ -111,6 +112,16 @@ const BlogSchema = new Schema<BlogDocument>(
       caption: { type: String, trim: true },
       fileVaultId: { type: Number },
       storageKey: { type: String, trim: true },
+    },
+
+    linkedResourceIds: {
+      type: [
+        {
+          type: Schema.Types.ObjectId,
+          ref: "Resource",
+        },
+      ],
+      default: [],
     },
   },
   {

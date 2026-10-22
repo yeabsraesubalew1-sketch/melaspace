@@ -77,6 +77,16 @@ const rawNavSections: NavSection[] = [
     ],
   },
   {
+    title: "Resources",
+    requiredRoles: ["root_admin", "super_admin", "manager"],
+    items: [
+      {
+        label: "Resource Hub",
+        href: "/admin/resources",
+      },
+    ],
+  },
+  {
     title: "Administration",
     requiredRoles: ["root_admin", "super_admin"],
     items: [

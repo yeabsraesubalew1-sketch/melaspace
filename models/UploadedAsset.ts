@@ -1,9 +1,9 @@
 import mongoose, { Schema, Model, models } from "mongoose";
 import "@/models/User";
 
-export type AssetType = "image" | "file" | "featured_image";
+export type AssetType = "image" | "file" | "featured_image" | "resource_file";
 export type AssetStatus = "temp" | "attached" | "trashed";
-export type EntityType = "blog" | "proposal";
+export type EntityType = "blog" | "proposal" | "resource";
 
 export interface UploadedAssetDocument extends mongoose.Document {
   fileVaultId: number;
@@ -53,7 +53,7 @@ const UploadedAssetSchema = new Schema<UploadedAssetDocument>(
     },
     assetType: {
       type: String,
-      enum: ["image", "file", "featured_image"],
+      enum: ["image", "file", "featured_image", "resource_file"],
       required: true,
       index: true,
     },
@@ -75,7 +75,7 @@ const UploadedAssetSchema = new Schema<UploadedAssetDocument>(
     },
     entityType: {
       type: String,
-      enum: ["blog", "proposal"],
+      enum: ["blog", "proposal", "resource"],
       index: true,
     },
     entityId: {

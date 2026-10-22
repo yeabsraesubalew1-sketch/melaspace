@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { Blog } from "@/models/Blog";
 import type { BlogDocument } from "@/models/Blog";
+import { Resource } from "@/models/Resource";
 import { Category } from "@/models/Category";
 import { Types } from "mongoose";
 import type { ApiResponse, BlogPreview } from "@/types/api";
@@ -222,6 +223,7 @@ export async function POST(req: Request) {
       isPinned = false,
       isAnonymous = false,
       featuredImage,
+      linkedResourceIds = [],
     } = body;
 
     if (!title || !content) {
@@ -328,6 +330,10 @@ export async function POST(req: Request) {
       categoryIds = existingCategories.map((cat) => cat._id);
     }
 
+    const validResourceObjectIds = Array.isArray(linkedResourceIds)
+      ? linkedResourceIds.filter((rid) => Types.ObjectId.isValid(rid)).map((rid) => new Types.ObjectId(rid))
+      : [];
+
     const blog = await Blog.create({
       title,
       slug,
@@ -350,7 +356,15 @@ export async function POST(req: Request) {
       author: session.user.id ? new Types.ObjectId(session.user.id) : undefined,
       authorName: isAnonymous ? "Mela Team" : (session.user.name || "Mela Team"),
       publishedAt: status === "published" ? new Date() : undefined,
+      linkedResourceIds: validResourceObjectIds,
     });
+
+    if (validResourceObjectIds.length > 0) {
+      await Resource.updateMany(
+        { _id: { $in: validResourceObjectIds } },
+        { $addToSet: { linkedBlogIds: blog._id } }
+      );
+    }
 
     const blocks =
       typeof content === "object" &&

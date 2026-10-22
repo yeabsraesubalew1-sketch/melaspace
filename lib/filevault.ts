@@ -239,6 +239,27 @@ export async function purgeFileVaultFile(fileId: number, apiKey: string): Promis
 }
 
 /**
+ * Restores a trashed file in FileVault.
+ */
+export async function restoreFileVaultFile(fileId: number, apiKey: string): Promise<boolean> {
+  if (!apiKey || !fileId) return false;
+
+  try {
+    const res = await fileVaultFetch(`${FILEVAULT_URL}/api/v1/files/${fileId}/restore`, {
+      method: "POST",
+      headers: {
+        "X-Api-Key": apiKey,
+      },
+    });
+
+    return res.ok;
+  } catch (error) {
+    console.error(`[FILEVAULT] Error restoring file ${fileId}:`, error);
+    return false;
+  }
+}
+
+/**
  * Fetches the authenticated download stream for private or trashed files.
  */
 export async function downloadFileVaultStream(

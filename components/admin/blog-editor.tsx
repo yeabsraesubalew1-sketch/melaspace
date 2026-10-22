@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import toast from "react-hot-toast";
 import Editor from "./Editor";
 import CategorySelector from "./category-selector";
+import ResourceSelector from "./ResourceSelector";
 import FeaturedImageUploader from "./FeaturedImageUploader";
 import type { OutputData } from "@editorjs/editorjs";
 import type { FeaturedImage } from "@/types/api";
@@ -46,6 +47,7 @@ export default function BlogEditor({ mode, blogId }: BlogEditorProps) {
   const [content, setContent] = useState<OutputData>({ blocks: [] });
   const [featuredImage, setFeaturedImage] = useState<FeaturedImage | null>(null);
   const [categories, setCategories] = useState<string[]>([]);
+  const [linkedResourceIds, setLinkedResourceIds] = useState<string[]>([]);
   const [isPinned, setIsPinned] = useState(false);
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [authorData, setAuthorData] = useState<{
@@ -67,6 +69,7 @@ export default function BlogEditor({ mode, blogId }: BlogEditorProps) {
       content: { blocks: [] },
       featuredImage: null,
       categories: [],
+      linkedResourceIds: [],
       isPinned: false,
       isAnonymous: false,
     })
@@ -93,10 +96,11 @@ export default function BlogEditor({ mode, blogId }: BlogEditorProps) {
         content,
         featuredImage: featuredImage ? featuredImage.url : null,
         categories: [...categories].sort(),
+        linkedResourceIds: [...linkedResourceIds].sort(),
         isPinned,
         isAnonymous,
       }),
-    [title, excerpt, content, featuredImage, categories, isPinned, isAnonymous]
+    [title, excerpt, content, featuredImage, categories, linkedResourceIds, isPinned, isAnonymous]
   );
 
   const hasUnsavedChanges = currentSnapshot !== lastSavedSnapshot;
@@ -276,6 +280,11 @@ export default function BlogEditor({ mode, blogId }: BlogEditorProps) {
         setCategories(
           (blog.categories as BlogCategory[]).map((category) => category._id)
         );
+        const normalizedResourceIds = ((blog.linkedResourceIds || []) as Array<{ _id?: string } | string>)
+          .map((r) => (typeof r === "object" && r?._id ? r._id : String(r)))
+          .sort();
+
+        setLinkedResourceIds(normalizedResourceIds);
         setAuthorData({
           author: blog.author,
           authorName: blog.authorName,
@@ -289,6 +298,7 @@ export default function BlogEditor({ mode, blogId }: BlogEditorProps) {
             content: blog.content,
             featuredImage: blog.featuredImage ? blog.featuredImage.url : null,
             categories: normalizedCategoryIds,
+            linkedResourceIds: normalizedResourceIds,
             isPinned: Boolean(blog.isPinned),
             isAnonymous: Boolean(blog.isAnonymous),
           })
@@ -333,6 +343,7 @@ export default function BlogEditor({ mode, blogId }: BlogEditorProps) {
         excerpt: excerpt.trim() || undefined,
         content,
         categories,
+        linkedResourceIds,
         featuredImage,
         isPinned: publish ? isPinned : false,
         isAnonymous,
@@ -616,6 +627,24 @@ export default function BlogEditor({ mode, blogId }: BlogEditorProps) {
             </label>
           </div>
         )}
+      </div>
+
+      {/* Linked Resources Section */}
+      <div className="rounded-xl border border-border bg-background/85 p-4 shadow-sm sm:p-5">
+        <div className="flex items-center justify-between gap-4 mb-3">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wide text-foreground/60">
+              Linked Downloadable Resources
+            </p>
+            <p className="text-xs text-foreground/50 mt-0.5">
+              Attach files, slide decks, templates, or cheatsheets. Readers can download them directly from this article.
+            </p>
+          </div>
+        </div>
+        <ResourceSelector
+          selected={linkedResourceIds}
+          onChange={setLinkedResourceIds}
+        />
       </div>
 
       {/* Save Bottom Bar */}

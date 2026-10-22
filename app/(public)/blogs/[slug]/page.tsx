@@ -4,8 +4,10 @@ import Renderer from "@/components/editorjs/Renderer";
 import TableOfContents from "@/components/blog/TableOfContents";
 import BookmarkButton from "@/components/blog/BookmarkButton";
 import ViewTracker from "@/components/blog/ViewTracker";
+import LinkedResourcesModule from "@/components/blog/LinkedResourcesModule";
 import DefaultAvatar from "@/components/ui/DefaultAvatar";
 import type { EditorContent } from "@/types/editor";
+import type { ResourceItem } from "@/types/api";
 import type { Metadata } from "next";
 import { processBlogContent } from "@/lib/blog-utils";
 import { normalizeMediaUrl } from "@/lib/media";
@@ -56,6 +58,7 @@ interface Blog {
     alt?: string;
     caption?: string;
   };
+  linkedResources?: ResourceItem[];
 }
 
 export async function generateMetadata({
@@ -416,6 +419,9 @@ export default async function BlogPage({ params }: Props) {
             <div className="space-y-4">
               <Renderer content={blog.content} blogTitle={blog.title} openLinksInNewTab />
             </div>
+
+            {/* Linked Downloadable Resources & Decks */}
+            <LinkedResourcesModule resources={blog.linkedResources} />
           </article>
         </div>
       </div>

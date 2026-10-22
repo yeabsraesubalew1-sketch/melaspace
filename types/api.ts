@@ -53,6 +53,7 @@ export interface BlogPreview {
   isAnonymous?: boolean;
   isBookmarked?: boolean;
   featuredImage?: FeaturedImage;
+  linkedResourceIds?: string[];
 }
 
 /**
@@ -60,6 +61,45 @@ export interface BlogPreview {
  */
 export interface BlogFull extends BlogPreview {
   content: EditorContent;
+  linkedResources?: ResourceItem[];
   createdAt: string;
   updatedAt: string;
 }
+
+export interface ResourceFileItem {
+  label: string;
+  fileVaultId: number;
+  storageKey: string;
+  originalName: string;
+  mimeType: string;
+  sizeBytes: number;
+  extension: string;
+}
+
+export interface ResourceCoverImageItem {
+  url: string;
+  alt?: string;
+  fileVaultId?: number;
+}
+
+export interface ResourceItem {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  description: string;
+  category: string;
+  tags: string[];
+  coverImage?: ResourceCoverImageItem;
+  files: ResourceFileItem[];
+  downloadCount: number;
+  status: "draft" | "published" | "trashed";
+  authorId?: string;
+  authorName?: string;
+  linkedBlogIds?: string[];
+  linkedBlogs?: Array<{ id: string; title: string; slug: string; excerpt?: string }>;
+  trashedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+

@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { Blog } from "@/models/Blog";
+import { Resource } from "@/models/Resource";
 import { Category } from "@/models/Category";
 import { Types } from "mongoose";
 import type { ApiResponse } from "@/types/api";
@@ -154,7 +155,17 @@ export async function PUT(
     await connectDB();
 
     const body = await req.json();
-    const { title, excerpt, content, categories, status, isPinned, isAnonymous, featuredImage } = body;
+    const {
+      title,
+      excerpt,
+      content,
+      categories,
+      status,
+      isPinned,
+      isAnonymous,
+      featuredImage,
+      linkedResourceIds,
+    } = body;
 
     const blog = await Blog.findById(id);
 
@@ -345,6 +356,30 @@ export async function PUT(
         };
       } else {
         blog.featuredImage = undefined;
+      }
+    }
+    if (linkedResourceIds !== undefined) {
+      const prevResourceIds = (blog.linkedResourceIds || []).map((rid) => rid.toString());
+      const nextResourceObjectIds = Array.isArray(linkedResourceIds)
+        ? linkedResourceIds.filter((rid) => Types.ObjectId.isValid(rid)).map((rid) => new Types.ObjectId(rid))
+        : [];
+      blog.linkedResourceIds = nextResourceObjectIds;
+      const nextResourceIds = nextResourceObjectIds.map((rid) => rid.toString());
+
+      const unlinkedIds = prevResourceIds.filter((pid) => !nextResourceIds.includes(pid));
+      if (unlinkedIds.length > 0) {
+        await Resource.updateMany(
+          { _id: { $in: unlinkedIds.map((id) => new Types.ObjectId(id)) } },
+          { $pull: { linkedBlogIds: blog._id } }
+        );
+      }
+
+      const newlyLinkedIds = nextResourceIds.filter((nid) => !prevResourceIds.includes(nid));
+      if (newlyLinkedIds.length > 0) {
+        await Resource.updateMany(
+          { _id: { $in: newlyLinkedIds.map((id) => new Types.ObjectId(id)) } },
+          { $addToSet: { linkedBlogIds: blog._id } }
+        );
       }
     }
 
