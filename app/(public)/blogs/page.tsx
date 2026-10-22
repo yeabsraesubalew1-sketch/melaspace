@@ -6,6 +6,8 @@ import CategoryQueryGuard from "@/components/blog/CategoryQueryGuard";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { buildPageMetadata, breadcrumbSchema } from "@/lib/seo";
+import { warmFileVaultConnection } from "@/lib/filevault";
+import { normalizeMediaUrl } from "@/lib/media";
 
 function getBaseUrl() {
   const envBaseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? process.env.NEXTAUTH_URL;
@@ -35,6 +37,11 @@ interface Blog {
   isPinned?: boolean;
   views?: number;
   authorName?: string;
+  featuredImage?: {
+    url: string;
+    alt?: string;
+    caption?: string;
+  };
 }
 
 interface Category {
@@ -141,14 +148,27 @@ export default async function BlogsPage({
     fetchCategories(),
   ]);
 
+  // Keep SSL keep-alive socket warm in background for snappy image streaming
+  warmFileVaultConnection();
+
   const blogs: Blog[] = Array.isArray(blogsRes?.data) ? blogsRes.data : [];
   const meta = {
     page: Number(blogsRes?.meta?.page) || page,
     totalPages: Math.max(1, Number(blogsRes?.meta?.totalPages) || 1),
   };
 
+  // Find first card with featured image to preload its image
+  const firstFeatured = blogs.find((b) => b.featuredImage?.url);
+  const preloadImageUrl = firstFeatured?.featuredImage?.url
+    ? normalizeMediaUrl(firstFeatured.featuredImage.url)
+    : null;
+
   return (
     <main className="mx-auto max-w-6xl px-4 pb-10 pt-20 sm:px-6 sm:pb-12 sm:pt-24">
+      {preloadImageUrl && (
+        <link rel="preload" as="image" href={preloadImageUrl} />
+      )}
+
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(blogsBreadcrumbJsonLd) }}

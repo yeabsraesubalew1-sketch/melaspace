@@ -9,6 +9,7 @@ import type { EditorContent } from "@/types/editor";
 import type { Metadata } from "next";
 import { processBlogContent } from "@/lib/blog-utils";
 import { normalizeMediaUrl } from "@/lib/media";
+import { warmFileVaultConnection } from "@/lib/filevault";
 import { OG_IMAGE_VERSION, absoluteUrl, seoConfig, breadcrumbSchema } from "@/lib/seo";
 import { cache } from "react";
 
@@ -153,6 +154,9 @@ export default async function BlogPage({ params }: Props) {
   if (!blog) {
     notFound();
   }
+
+  // Keep SSL keep-alive socket warm in background for instant media streaming
+  warmFileVaultConnection();
 
   const { readingTime, toc } = processBlogContent(blog.content);
   const authorName = blog.authorName || blog.author?.name || "Mela Team";
