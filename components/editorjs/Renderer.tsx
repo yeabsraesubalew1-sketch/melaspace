@@ -9,11 +9,45 @@ import ParagraphBlock from "./blocks/ParagraphBlock";
 import QuoteBlock from "./blocks/QuoteBlock";
 import ImageBlock from "./blocks/ImageBlock";
 import FileBlock from "./blocks/FileBlock";
+import ResourceMentionHoverCard from "@/components/resources/ResourceMentionHoverCard";
+
+import type { ResourceItem } from "@/types/api";
 
 interface Props {
   content: EditorContent;
   openLinksInNewTab?: boolean;
   blogTitle?: string;
+  linkedResources?: ResourceItem[];
+}
+
+function sanitizeResourceMentions(
+  html: string,
+  validSlugs?: Set<string>,
+  validIds?: Set<string>
+): string {
+  if (!validSlugs || !validIds) {
+    return html;
+  }
+
+  return html.replace(
+    /<a\b([^>]*class=["'][^"']*resource-mention[^"']*["'][^>]*)>(.*?)<\/a>/gi,
+    (fullMatch, attributes: string, innerText: string) => {
+      const slugMatch = attributes.match(/data-resource-slug=["']([^"']+)["']/i);
+      const idMatch = attributes.match(/data-resource-id=["']([^"']+)["']/i);
+
+      const slug = slugMatch ? slugMatch[1] : "";
+      const id = idMatch ? idMatch[1] : "";
+
+      const isValid = (slug && validSlugs.has(slug)) || (id && validIds.has(id));
+
+      if (isValid) {
+        return fullMatch;
+      }
+
+      // Fail-safe: Resource is drafted, trashed, or deleted -> unwrap into clean text
+      return innerText.replace(/^📎\s*/, "");
+    }
+  );
 }
 
 function enforceAnchorsOpenInNewTab(html: string) {
@@ -26,22 +60,32 @@ function enforceAnchorsOpenInNewTab(html: string) {
   });
 }
 
-function mapHtmlStrings(value: unknown): unknown {
+function mapHtmlStrings(
+  value: unknown,
+  openInNewTab: boolean,
+  validSlugs?: Set<string>,
+  validIds?: Set<string>
+): unknown {
   if (typeof value === "string") {
-    return value.includes("<a")
-      ? enforceAnchorsOpenInNewTab(value)
-      : value;
+    let processed = value;
+    if (processed.includes("resource-mention")) {
+      processed = sanitizeResourceMentions(processed, validSlugs, validIds);
+    }
+    if (openInNewTab && processed.includes("<a")) {
+      processed = enforceAnchorsOpenInNewTab(processed);
+    }
+    return processed;
   }
 
   if (Array.isArray(value)) {
-    return value.map((item) => mapHtmlStrings(item));
+    return value.map((item) => mapHtmlStrings(item, openInNewTab, validSlugs, validIds));
   }
 
   if (value && typeof value === "object") {
     return Object.fromEntries(
       Object.entries(value).map(([key, nestedValue]) => [
         key,
-        mapHtmlStrings(nestedValue),
+        mapHtmlStrings(nestedValue, openInNewTab, validSlugs, validIds),
       ])
     );
   }
@@ -49,10 +93,21 @@ function mapHtmlStrings(value: unknown): unknown {
   return value;
 }
 
-export default function Renderer({ content, openLinksInNewTab = false, blogTitle }: Props) {
-  const resolvedContent = openLinksInNewTab
-    ? (mapHtmlStrings(content) as EditorContent)
-    : content;
+export default function Renderer({
+  content,
+  openLinksInNewTab = false,
+  blogTitle,
+  linkedResources,
+}: Props) {
+  const validSlugs = linkedResources ? new Set(linkedResources.map((r) => r.slug)) : undefined;
+  const validIds = linkedResources ? new Set(linkedResources.map((r) => r.id)) : undefined;
+
+  const resolvedContent = mapHtmlStrings(
+    content,
+    openLinksInNewTab,
+    validSlugs,
+    validIds
+  ) as EditorContent;
   const blocks = normalizeEditorContent(resolvedContent);
   const headingSlugCounts = new Map<string, number>();
 
@@ -92,6 +147,7 @@ export default function Renderer({ content, openLinksInNewTab = false, blogTitle
             return null;
         }
       })}
+      <ResourceMentionHoverCard />
     </div>
   );
 }

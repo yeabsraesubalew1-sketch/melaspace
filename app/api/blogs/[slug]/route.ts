@@ -75,14 +75,38 @@ export async function GET(
       ? (blog.authorName === "Anonymous" || !isTeamAuthor ? "Anonymous" : "Mela Team")
       : (blog.authorName || populatedAuthor?.name || "Mela Team");
 
-    // Fetch linked resources
+    // Fetch linked resources (both article-level links and inline mentions)
     let linkedResources: ResourceItem[] = [];
     try {
+      // Scan content for any inline mentioned resource IDs or slugs
+      const contentStr = JSON.stringify(blog.content || {});
+      const inlineIds: string[] = [];
+      const inlineSlugs: string[] = [];
+
+      const idMatches = contentStr.match(/data-resource-id=\\"([a-f\d]{24})\\"/gi) || [];
+      for (const m of idMatches) {
+        const id = m.replace(/data-resource-id=\\"|\\"/gi, "");
+        if (id && !inlineIds.includes(id)) inlineIds.push(id);
+      }
+
+      const slugMatches = contentStr.match(/data-resource-slug=\\"([a-z0-9-]+)\\"/gi) || [];
+      for (const m of slugMatches) {
+        const s = m.replace(/data-resource-slug=\\"|\\"/gi, "");
+        if (s && !inlineSlugs.includes(s)) inlineSlugs.push(s);
+      }
+
+      const allReferencedIds = Array.from(new Set([...(blog.linkedResourceIds || []), ...inlineIds]));
+
+      const queryOr: Array<Record<string, unknown>> = [
+        { _id: { $in: allReferencedIds } },
+        { linkedBlogIds: blog._id },
+      ];
+      if (inlineSlugs.length > 0) {
+        queryOr.push({ slug: { $in: inlineSlugs } });
+      }
+
       const resourceDocs = await Resource.find({
-        $or: [
-          { _id: { $in: blog.linkedResourceIds || [] } },
-          { linkedBlogIds: blog._id },
-        ],
+        $or: queryOr,
         status: "published",
       }).lean();
 

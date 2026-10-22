@@ -8,6 +8,8 @@ import Underline from "@editorjs/underline";
 import type { API, BlockTune } from "@editorjs/editorjs";
 import { ImageTool } from "./editor-tools/ImageTool";
 import { FileTool } from "./editor-tools/FileTool";
+import { ResourceMentionTool } from "./editor-tools/ResourceMentionTool";
+import type { ResourceItem } from "@/types/api";
 
 
 type EmbedConstructor = new (...args: never[]) => object;
@@ -272,7 +274,12 @@ class EmbedSizeTune implements BlockTune {
   }
 }
 
-export const createEditorTools = async () => {
+export interface EditorToolsOptions {
+  isAdmin?: boolean;
+  onResourceMentioned?: (resource: ResourceItem) => void;
+}
+
+export const createEditorTools = async (options: EditorToolsOptions = {}) => {
   const embedModule = await import("@editorjs/embed");
   const embedExport =
     (embedModule as { default?: unknown }).default ?? embedModule;
@@ -367,7 +374,7 @@ export const createEditorTools = async () => {
     }
   }
 
-  return {
+  const tools: Record<string, object> = {
     header: {
       class: Header,
       inlineToolbar: true,
@@ -430,4 +437,15 @@ export const createEditorTools = async () => {
       class: FileTool,
     },
   };
+
+  if (options.isAdmin) {
+    tools.resourceMention = {
+      class: ResourceMentionTool,
+      config: {
+        onResourceMentioned: options.onResourceMentioned,
+      },
+    };
+  }
+
+  return tools;
 };

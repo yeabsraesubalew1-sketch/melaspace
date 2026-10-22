@@ -9,7 +9,7 @@ import CategorySelector from "./category-selector";
 import ResourceSelector from "./ResourceSelector";
 import FeaturedImageUploader from "./FeaturedImageUploader";
 import type { OutputData } from "@editorjs/editorjs";
-import type { FeaturedImage } from "@/types/api";
+import type { FeaturedImage, ResourceItem } from "@/types/api";
 
 type BlogCategory = {
   _id: string;
@@ -76,6 +76,18 @@ export default function BlogEditor({ mode, blogId }: BlogEditorProps) {
   );
 
   const canPin = ["root_admin", "super_admin"].includes(session?.user?.role || "");
+  const isAdminRole = ["root_admin", "super_admin", "manager"].includes(session?.user?.role || "");
+
+  const handleResourceMentioned = useCallback((resource: ResourceItem) => {
+    setLinkedResourceIds((prev) => {
+      if (prev.includes(resource.id)) return prev;
+      return [...prev, resource.id];
+    });
+    toast.success(`Attached "${resource.title}" to this article`, {
+      id: `mention-resource-${resource.id}`,
+      duration: 2500,
+    });
+  }, []);
 
   const authorUserId =
     authorData?.author && typeof authorData.author === "object"
@@ -493,6 +505,8 @@ export default function BlogEditor({ mode, blogId }: BlogEditorProps) {
           key={blogId || "new-blog"}
           initialData={content}
           onChange={handleEditorChange}
+          isAdmin={isAdminRole}
+          onResourceMentioned={handleResourceMentioned}
         />
       </div>
 
