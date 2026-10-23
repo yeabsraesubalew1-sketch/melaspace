@@ -19,6 +19,7 @@
     "@editorjs/marker": "^1.4.0",
     "@editorjs/quote": "^2.7.6",
     "@editorjs/underline": "^1.2.1",
+    "@google/genai": "^2.30.0",
     "@sotaproject/strikethrough": "^1.0.1",
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.36.2",

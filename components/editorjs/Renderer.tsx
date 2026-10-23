@@ -70,6 +70,11 @@ function mapHtmlStrings(
     let processed = value;
     if (processed.includes("resource-mention")) {
       processed = sanitizeResourceMentions(processed, validSlugs, validIds);
+      // Clean redundant 📎 emoji from inner text since CSS ::before provides the paperclip
+      processed = processed.replace(
+        /(<a\b[^>]*class=["'][^"']*resource-mention[^"']*["'][^>]*>)\s*📎\s*/gi,
+        "$1"
+      );
     }
     if (openInNewTab && processed.includes("<a")) {
       processed = enforceAnchorsOpenInNewTab(processed);

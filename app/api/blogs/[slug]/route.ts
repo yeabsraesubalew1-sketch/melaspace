@@ -142,6 +142,7 @@ export async function GET(
         slug: category.slug,
       })),
       content: blog.content,
+      aiSummary: blog.aiSummary,
       publishedAt: blog.publishedAt?.toISOString(),
       createdAt: blog.createdAt.toISOString(),
       updatedAt: blog.updatedAt.toISOString(),

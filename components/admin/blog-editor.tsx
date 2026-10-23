@@ -8,6 +8,7 @@ import Editor from "./Editor";
 import CategorySelector from "./category-selector";
 import ResourceSelector from "./ResourceSelector";
 import FeaturedImageUploader from "./FeaturedImageUploader";
+import AiCoWriterModal from "./blog-editor/AiCoWriterModal";
 import type { OutputData } from "@editorjs/editorjs";
 import type { FeaturedImage, ResourceItem } from "@/types/api";
 
@@ -50,11 +51,50 @@ export default function BlogEditor({ mode, blogId }: BlogEditorProps) {
   const [linkedResourceIds, setLinkedResourceIds] = useState<string[]>([]);
   const [isPinned, setIsPinned] = useState(false);
   const [isAnonymous, setIsAnonymous] = useState(false);
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+  const [editorKey, setEditorKey] = useState(0);
+
   const [authorData, setAuthorData] = useState<{
     author?: { _id?: string; name?: string; email?: string; role?: string } | string;
     authorName?: string;
     lastEditedBy?: { _id?: string; name?: string; email?: string; role?: string } | string;
   } | null>(null);
+
+  const handleApplyAi = useCallback(
+    (data: {
+      title: string;
+      excerpt: string;
+      content: OutputData;
+      categoryIds: string[];
+      resourceIds: string[];
+      append?: boolean;
+    }) => {
+      if (data.append) {
+        setContent((prev) => {
+          const currentBlocks = prev?.blocks || [];
+          const newBlocks = data.content?.blocks || [];
+          return {
+            ...prev,
+            blocks: [...currentBlocks, ...newBlocks],
+          };
+        });
+      } else {
+        if (data.title) setTitle(data.title);
+        if (data.excerpt) setExcerpt(data.excerpt);
+        setContent(data.content);
+        if (data.categoryIds && data.categoryIds.length > 0) {
+          setCategories((prev) => Array.from(new Set([...prev, ...data.categoryIds])));
+        }
+      }
+
+      if (data.resourceIds && data.resourceIds.length > 0) {
+        setLinkedResourceIds((prev) => Array.from(new Set([...prev, ...data.resourceIds])));
+      }
+
+      setEditorKey((prev) => prev + 1);
+    },
+    []
+  );
 
   const [loadingBlog, setLoadingBlog] = useState(mode === "edit");
   const [saveAction, setSaveAction] = useState<"draft" | "publish" | null>(
@@ -423,6 +463,41 @@ export default function BlogEditor({ mode, blogId }: BlogEditorProps) {
 
   return (
     <div className="space-y-5">
+      {/* Top AI Co-Writer Action Banner */}
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-primary/25 bg-gradient-to-r from-primary/[0.08] via-background to-surface-muted/60 p-3.5 shadow-sm sm:p-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-purple-600 to-amber-500 text-white shadow-sm shrink-0">
+            <svg className="h-4.5 w-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M12 3v3m0 12v3M3 12h3m12 0h3M5.6 5.6l2.1 2.1m8.6 8.6l2.1 2.1M5.6 18.4l2.1-2.1m8.6-8.6l2.1-2.1" />
+            </svg>
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold text-foreground sm:text-sm">
+                Gemini Editorial Co-Writer
+              </span>
+              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary border border-primary/20">
+                AI Assistant
+              </span>
+            </div>
+            <p className="text-xs text-foreground/60">
+              Transform rough notes or themes into publication-ready articles with auto-matched categories &amp; resource hovercards.
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setIsAiModalOpen(true)}
+          className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary to-primary/80 hover:from-primary/95 hover:to-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow transition hover:shadow-md cursor-pointer shrink-0"
+        >
+          <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M12 3v3m0 12v3M3 12h3m12 0h3M5.6 5.6l2.1 2.1m8.6 8.6l2.1 2.1M5.6 18.4l2.1-2.1m8.6-8.6l2.1-2.1" />
+          </svg>
+          <span>Open AI Co-Writer</span>
+        </button>
+      </div>
+
       {/* Title */}
       <div className="rounded-xl border border-border bg-background/85 p-4 shadow-sm sm:p-5">
         <p className="mb-2 text-xs font-medium uppercase tracking-wide text-foreground/60">
@@ -452,7 +527,10 @@ export default function BlogEditor({ mode, blogId }: BlogEditorProps) {
             onClick={handleAutoGenerateExcerpt}
             className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 py-1 text-xs font-medium text-foreground/80 hover:bg-surface-muted transition cursor-pointer"
           >
-            <span>✨ Auto-generate</span>
+            <svg className="h-3 w-3 text-primary shrink-0" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z" />
+            </svg>
+            <span>Auto-generate</span>
           </button>
         </div>
 
@@ -502,7 +580,7 @@ export default function BlogEditor({ mode, blogId }: BlogEditorProps) {
           </p>
         </div>
         <Editor
-          key={blogId || "new-blog"}
+          key={`${blogId || "new-blog"}-${editorKey}`}
           initialData={content}
           onChange={handleEditorChange}
           isAdmin={isAdminRole}
@@ -691,6 +769,14 @@ export default function BlogEditor({ mode, blogId }: BlogEditorProps) {
           </div>
         </div>
       </div>
+
+      {/* AI Co-Writer Modal */}
+      <AiCoWriterModal
+        isOpen={isAiModalOpen}
+        onClose={() => setIsAiModalOpen(false)}
+        currentTitle={title}
+        onApply={handleApplyAi}
+      />
     </div>
   );
 }

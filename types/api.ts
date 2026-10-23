@@ -61,6 +61,7 @@ export interface BlogPreview {
  */
 export interface BlogFull extends BlogPreview {
   content: EditorContent;
+  aiSummary?: EditorContent;
   linkedResources?: ResourceItem[];
   createdAt: string;
   updatedAt: string;

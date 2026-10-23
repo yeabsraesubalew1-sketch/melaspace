@@ -80,6 +80,12 @@ export default function CategorySelector({
 
   useEffect(() => {
     void fetchCategories();
+
+    const handleRefresh = () => {
+      void fetchCategories();
+    };
+    window.addEventListener("refresh-categories", handleRefresh);
+    return () => window.removeEventListener("refresh-categories", handleRefresh);
   }, [fetchCategories]);
 
   function toggle(id: string) {

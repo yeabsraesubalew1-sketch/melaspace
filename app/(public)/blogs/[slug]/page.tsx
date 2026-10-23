@@ -1,10 +1,10 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import Renderer from "@/components/editorjs/Renderer";
 import TableOfContents from "@/components/blog/TableOfContents";
 import BookmarkButton from "@/components/blog/BookmarkButton";
 import ViewTracker from "@/components/blog/ViewTracker";
 import LinkedResourcesModule from "@/components/blog/LinkedResourcesModule";
+import BlogReadingView from "@/components/blog/BlogReadingView";
 import DefaultAvatar from "@/components/ui/DefaultAvatar";
 import type { EditorContent } from "@/types/editor";
 import type { ResourceItem } from "@/types/api";
@@ -44,6 +44,7 @@ interface Blog {
     slug: string;
   }[];
   content: EditorContent;
+  aiSummary?: EditorContent;
   authorName?: string;
   author?: {
     id?: string;
@@ -419,15 +420,15 @@ export default async function BlogPage({ params }: Props) {
 
             <hr className="mb-10 border-border" />
 
-            {/* Content */}
-            <div className="space-y-4">
-              <Renderer
-                content={blog.content}
-                blogTitle={blog.title}
-                linkedResources={blog.linkedResources}
-                openLinksInNewTab
-              />
-            </div>
+            {/* Interactive Reading Experience: Full Article ↔ 1-Min Summary */}
+            <BlogReadingView
+              slug={blog.slug}
+              fullContent={blog.content}
+              initialSummary={blog.aiSummary}
+              blogTitle={blog.title}
+              readingTime={readingTime}
+              linkedResources={blog.linkedResources}
+            />
 
             {/* Linked Downloadable Resources & Decks */}
             <LinkedResourcesModule resources={blog.linkedResources} />
