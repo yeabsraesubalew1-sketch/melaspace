@@ -4,13 +4,15 @@ function basicSlugify(text: string) {
   return text
     .toLowerCase()
     .trim()
-    .replace(/[^\w\s-]/g, "")
+    // Supports Unicode letters (\p{L} includes Ethiopic, Latin, etc.) and numbers (\p{N})
+    .replace(/[^\p{L}\p{N}\s-]/gu, "")
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-");
 }
 
-export async function generateUniqueSlug(title: string) {
-  const baseSlug = basicSlugify(title) || "blog";
+export async function generateUniqueSlug(title: string, preferredSlug?: string) {
+  const candidate = (preferredSlug && basicSlugify(preferredSlug)) || basicSlugify(title);
+  const baseSlug = candidate || "blog";
 
   let slug = baseSlug;
   let counter = 1;

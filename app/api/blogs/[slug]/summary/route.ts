@@ -35,9 +35,13 @@ export async function GET(
 ) {
   try {
     const { slug } = await params;
+    const decodedSlug = decodeURIComponent(slug);
     await connectDB();
 
-    const blog = await Blog.findOne({ slug, status: "published" })
+    const blog = await Blog.findOne({
+      $or: [{ slug }, { slug: decodedSlug }],
+      status: "published",
+    })
       .select("_id title slug aiSummary linkedResourceIds")
       .lean();
 
@@ -74,6 +78,7 @@ export async function POST(
 ) {
   try {
     const { slug } = await params;
+    const decodedSlug = decodeURIComponent(slug);
     const url = new URL(req.url);
     const force = url.searchParams.get("force") === "true";
 
@@ -90,7 +95,10 @@ export async function POST(
 
     await connectDB();
 
-    const blog = await Blog.findOne({ slug, status: "published" });
+    const blog = await Blog.findOne({
+      $or: [{ slug }, { slug: decodedSlug }],
+      status: "published",
+    });
 
     if (!blog) {
       return NextResponse.json<ApiResponse<null>>(

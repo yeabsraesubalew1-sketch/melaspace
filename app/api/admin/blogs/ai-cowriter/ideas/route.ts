@@ -46,17 +46,36 @@ export async function GET(req: Request) {
 
     const { searchParams } = new URL(req.url);
     const context = searchParams.get("topic")?.trim() || "";
+    const language = searchParams.get("language")?.trim() === "am" ? "am" : "en";
+    const isRefine = searchParams.get("mode") === "refine";
 
-    const prompt = context
-      ? `Provide 4 fresh, thought-provoking coaching article angles exploring "${context}". Each should be a compelling single sentence proposing practical reflections or somatic insights.`
-      : `Provide 4 diverse, timely coaching themes for Mela Space exploring emotional wellness, burnout recovery, nervous system regulation, or self-compassion. Each should be a compelling single sentence proposing practical reflections or somatic insights.`;
+    let prompt: string;
+    if (isRefine) {
+      prompt =
+        language === "am"
+          ? context
+            ? `Provide 4 distinct, actionable article editing directives in natural Amharic (አማርኛ) to improve an existing coaching post focusing on "${context}". Each should be a single sentence in Amharic (e.g. adding somatic check-ins, softening the tone, creating practical micro-habits, or expanding takeaways).`
+            : `Provide 4 distinct, actionable article editing directives in natural Amharic (አማርኛ) to improve or transform an existing wellness article (e.g., adding nervous system grounding, shifting to self-compassion, writing practical boundary scripts, or adding journal reflection prompts). Each should be a single sentence in Amharic.`
+          : context
+            ? `Provide 4 distinct, actionable editorial directives to improve an existing coaching post focusing on "${context}". Each should be a single sentence (e.g. deepening somatic check-ins, softening tone, creating practical micro-habits, or expanding reflection prompts).`
+            : `Provide 4 distinct, actionable editorial directives to improve or transform an existing wellness article (e.g., adding nervous system grounding, shifting to tender self-compassion, writing practical boundary scripts, or adding reflective journal prompts). Each should be a single sentence.`;
+    } else {
+      prompt =
+        language === "am"
+          ? context
+            ? `Provide 4 fresh, thought-provoking coaching article angles in natural Amharic (አማርኛ) exploring "${context}". Each should be a compelling single sentence in Amharic proposing practical reflections or somatic insights.`
+            : `Provide 4 diverse, timely coaching themes for Mela Space in natural Amharic (አማርኛ) exploring emotional wellness (የስሜት ጤንነት), burnout recovery (ከውጥረት ማገገም), nervous system regulation (የውስጥ መረጋጋት), or self-compassion (ለራስ ርህራሄ). Each should be a compelling single sentence in Amharic.`
+          : context
+            ? `Provide 4 fresh, thought-provoking coaching article angles exploring "${context}". Each should be a compelling single sentence proposing practical reflections or somatic insights.`
+            : `Provide 4 diverse, timely coaching themes for Mela Space exploring emotional wellness, burnout recovery, nervous system regulation, or self-compassion. Each should be a compelling single sentence proposing practical reflections or somatic insights.`;
+    }
 
     const parsed = await generateGeminiJson<{ ideas: string[] }>({
       prompt,
       systemInstruction: MELA_TONE_SYSTEM_INSTRUCTION,
       schema: ideasSchema,
       temperature: 0.8,
-      maxOutputTokens: 1000,
+      maxOutputTokens: language === "am" ? 2000 : 1000,
     });
 
     const ideas: string[] = Array.isArray(parsed?.ideas) ? parsed.ideas.slice(0, 4) : [];

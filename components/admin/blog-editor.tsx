@@ -775,6 +775,8 @@ export default function BlogEditor({ mode, blogId }: BlogEditorProps) {
         isOpen={isAiModalOpen}
         onClose={() => setIsAiModalOpen(false)}
         currentTitle={title}
+        currentContent={content}
+        mode={mode}
         onApply={handleApplyAi}
       />
     </div>

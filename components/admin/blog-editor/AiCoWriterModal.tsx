@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import toast from "react-hot-toast";
 import Renderer from "@/components/editorjs/Renderer";
@@ -20,6 +20,8 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   currentTitle?: string;
+  currentContent?: OutputData | EditorContent;
+  mode?: "create" | "edit";
   onApply: (data: {
     title: string;
     excerpt: string;
@@ -49,6 +51,46 @@ const COACHING_THEMES_LIBRARY = [
   "Understanding people-pleasing as a trauma response: Finding safe assertiveness",
 ];
 
+const COACHING_THEMES_LIBRARY_AM = [
+  "የአእምሮ ድካምን ማስተካከል፡ ያለጸጸት ራስን የመጠበቂያ 4 ተጨባጭ ልምምዶች",
+  "የውስጥ ወቃሽ ድምጽን መቆጣጠር፡ ፍጹምነትን ከመሻት ይልቅ ለራስ የሚደረግ ርህራሄ",
+  "ስሜታዊ ጫናን እና ጭንቀትን ማርገብ፡ በከባድ ውጥረት ውስጥ ውስጣዊ ሰላምን ማግኘት",
+  "የሀዘንና የህይወት ለውጥ ጊዜያትን በቅንነት እና በራስ ርህራሄ ማለፍ",
+  "የእረፍት አስፈላጊነት፡ ከመጠን በላይ ስራንና የማያቋርጥ አጣዳፊነትን ማስወገድ",
+  "ለድንገተኛ ጭንቀትና ፍርሃት የሚረዱ የአተነፋፈስ ዘዴዎች",
+  "ለአመራሮች ስሜታዊ እርጋታ፡ በመጀመሪያ ለራስ ምቹ የስነ-ልቦና ከባቢ መፍጠር",
+  "ወሰን ማበጀት ለራስ እንደ እንክብካቤ፡ ያለ ብዙ ማብራሪያ 'አይሆንም' ማለት",
+  "ከማነጻጸር ወደ እርካታ፡ የማህበራዊ ሚዲያ ቅናትን እና የራስ ዋጋን መገንዘብ",
+  "ውስጣዊ ጥርጣሬን መቋቋም፡ በራስ መተማመንን በረጋ መንፈስ መመለስ",
+  "ከውድቀት ወይም ከተስፋ መቁረጥ በኋላ በራስ መተማመንን እንደገና መገንባት",
+  "የጥዋት የሰላም ስነ-ስርዓት፡ የነርቭ ስርዓትን የሚጠብቁ የዕለት ተዕለት ልማዶች",
+  "የጡንቻና የአካል ውጥረትን ማርገብ፡ ለስነ-ልቦና ጤንነት የሚረዱ አካላዊ ልምምዶች",
+  "ራስን ከልብ ይቅር ማለት፡ ያለፈውን ጸጸት አውርዶ በአዲስ መንፈስ መጀመር",
+  "አስቸጋሪ የቤተሰብ ግንኙነቶችን በስሜታዊ ሚዛንና በረጋ መንፈስ ማስተዳደር",
+  "ሁሉንም ለማስደሰት ከመሮጥ መላቀቅ፡ ጤናማ የግል ድምጽን ማግኘት",
+];
+
+const REFINE_THEMES_LIBRARY_EN = [
+  "Deepen somatic grounding: add bodily check-ins, sensory anchors, and vagus nerve cues to each section",
+  "Shift tone to compassionate and validating: soften perfectionist urgency and hold space for burnout",
+  "Actionable reframing: convert high-level theory into practical micro-habits, boundary scripts, and inquiries",
+  "Translate and adapt this entire article into fluent, authentic Amharic (አማርኛ) with cultural warmth",
+  "Expand closing takeaways: add 4 reflective coaching journal prompts for the reader",
+  "Executive discernment: reframe this article for mindful leaders with calm presence and healthy boundaries",
+  "Tighten and clarify: eliminate redundant phrasing and strengthen paragraph transitions while preserving voice",
+  "Incorporate nervous system regulation: add breath pacing micro-rituals into key sections",
+];
+
+const REFINE_THEMES_LIBRARY_AM = [
+  "አካላዊና ስሜታዊ እርጋታን ማጎልበት፡ በእያንዳንዱ ክፍል ውስጥ የነርቭ ስርዓትን የሚያረጋጉ ልምምዶችን ማካተት",
+  "የአጻጻፍ ስልቱን የበለጠ አዛኝ እና አጽናኝ ማድረግ፡ ራስን ከመውቀስ ይልቅ ርህራሄንና እረፍትን ማጉላት",
+  "ተጨባጭ የዕለት ተዕለት ልምምዶች፡ ወደ ተግባር የሚቀየሩ ጥቃቅን ልማዶችን እና ወሰን የማበጀት ዘዴዎችን ማከል",
+  "ጽሁፉን ወደ እንግሊዝኛ ወይም ሙሉ አቀላጥፎ አማርኛ መቀየርና ማስተካከል",
+  "የማጠቃለያ ሃሳቦችን ማስፋት፡ ለአንባቢው 4 ጥልቅ የግል ማስታወሻ መጻፊያ ጥያቄዎችን ማካተት",
+  "ለአመራሮች ተስማሚ ማድረግ፡ በስሜታዊ ብስለት እና በረጋ መንፈስ ውሳኔዎችን የማሳለፍ ጥበብ",
+  "ጽሁፉን ይበልጥ ግልጽ እና አጭር ማድረግ፡ ዋናውን ፍሬ ነገር ሳያጣ አላስፈላጊ ቃላትን መቀነስ",
+];
+
 type CoachingTone =
   | "grounded"
   | "somatic"
@@ -61,14 +103,35 @@ type CoachingTone =
   | "direct"
   | "philosophical";
 
+function getSuggestionStorageKey(lang: "en" | "am", isRefine: boolean) {
+  return `melaspace_ai_suggestions_${isRefine ? "refine" : "draft"}_${lang}`;
+}
+
+function getStoredSuggestions(lang: "en" | "am", isRefine: boolean): string[] | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(getSuggestionStorageKey(lang, isRefine));
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch {
+    // ignore storage read issues
+  }
+  return null;
+}
+
 export default function AiCoWriterModal({
   isOpen,
   onClose,
   currentTitle,
+  currentContent,
+  mode,
   onApply,
 }: Props) {
   const [mounted, setMounted] = useState(false);
   const [topic, setTopic] = useState("");
+  const [language, setLanguage] = useState<"en" | "am">("en");
   const [tone, setTone] = useState<CoachingTone>("grounded");
   const [targetLength, setTargetLength] = useState<"short" | "standard" | "deep">("standard");
   const [loading, setLoading] = useState(false);
@@ -76,29 +139,119 @@ export default function AiCoWriterModal({
   const [result, setResult] = useState<CoWriterResult | null>(null);
   const [activeTab, setActiveTab] = useState<"preview" | "meta">("preview");
 
-  const [suggestionOffset, setSuggestionOffset] = useState(0);
-  const [suggestions, setSuggestions] = useState<string[]>(() =>
-    COACHING_THEMES_LIBRARY.slice(0, 4)
+  // Workflow mode: "draft" (new) or "refine" (edit existing content)
+  const hasExistingContent = Boolean(currentContent?.blocks && currentContent.blocks.length > 0);
+  const [workflowMode, setWorkflowMode] = useState<"draft" | "refine">("draft");
+
+  // Browser notification permission state
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>("default");
+
+  const isRefine = workflowMode === "refine";
+
+  const getLibrary = useCallback(
+    (lang: "en" | "am", refine: boolean) => {
+      if (refine) {
+        return lang === "am" ? REFINE_THEMES_LIBRARY_AM : REFINE_THEMES_LIBRARY_EN;
+      }
+      return lang === "am" ? COACHING_THEMES_LIBRARY_AM : COACHING_THEMES_LIBRARY;
+    },
+    []
   );
+
+  const [suggestionOffset, setSuggestionOffset] = useState(0);
+  const [suggestions, setSuggestions] = useState<string[]>(() => {
+    return COACHING_THEMES_LIBRARY.slice(0, 4);
+  });
   const [isGeneratingIdeas, setIsGeneratingIdeas] = useState(false);
 
+  // Load persisted suggestions from localStorage on mount or when mode/language changes
+  useEffect(() => {
+    const stored = getStoredSuggestions(language, isRefine);
+    if (stored) {
+      setSuggestions(stored.slice(0, 4));
+    } else {
+      const lib = getLibrary(language, isRefine);
+      setSuggestions(lib.slice(0, 4));
+    }
+    setSuggestionOffset(0);
+  }, [language, isRefine, getLibrary]);
+
+  // Sync initial workflowMode when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      if (mode === "edit" || hasExistingContent) {
+        setWorkflowMode("refine");
+      } else {
+        setWorkflowMode("draft");
+      }
+    }
+  }, [isOpen, mode, hasExistingContent]);
+
+  // Check notification permission on mount
+  useEffect(() => {
+    setMounted(true);
+    if (typeof window !== "undefined" && "Notification" in window) {
+      setNotificationPermission(Notification.permission);
+    }
+  }, []);
+
+  const handleRequestNotification = async () => {
+    if (typeof window !== "undefined" && "Notification" in window) {
+      try {
+        const perm = await Notification.requestPermission();
+        setNotificationPermission(perm);
+        if (perm === "granted") {
+          toast.success("Browser notifications enabled!");
+        } else if (perm === "denied") {
+          toast.error("Notifications blocked in browser settings.");
+        }
+      } catch {
+        // ignore
+      }
+    }
+  };
+
   const handleShuffleSuggestions = () => {
-    const nextOffset = (suggestionOffset + 4) % COACHING_THEMES_LIBRARY.length;
+    const lib = getLibrary(language, isRefine);
+    const nextOffset = (suggestionOffset + 4) % lib.length;
     setSuggestionOffset(nextOffset);
-    setSuggestions(COACHING_THEMES_LIBRARY.slice(nextOffset, nextOffset + 4));
+    const nextSlice = lib.slice(nextOffset, nextOffset + 4);
+    setSuggestions(nextSlice);
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem(
+          getSuggestionStorageKey(language, isRefine),
+          JSON.stringify(nextSlice)
+        );
+      } catch {}
+    }
   };
 
   const handleRegenerateAiIdeas = async () => {
     setIsGeneratingIdeas(true);
     try {
+      const base = `/api/admin/blogs/ai-cowriter/ideas?language=${language}${isRefine ? "&mode=refine" : ""}`;
       const url = topic.trim()
-        ? `/api/admin/blogs/ai-cowriter/ideas?topic=${encodeURIComponent(topic.trim())}`
-        : "/api/admin/blogs/ai-cowriter/ideas";
+        ? `${base}&topic=${encodeURIComponent(topic.trim())}`
+        : base;
       const res = await fetch(url);
       const json = await res.json();
       if (json.success && Array.isArray(json.data) && json.data.length > 0) {
         setSuggestions(json.data);
-        toast.success("Generated 4 fresh coaching themes!");
+        // Persist to localStorage across logins
+        if (typeof window !== "undefined") {
+          try {
+            localStorage.setItem(
+              getSuggestionStorageKey(language, isRefine),
+              JSON.stringify(json.data)
+            );
+          } catch {}
+        }
+        toast.success(
+          language === "am"
+            ? "4 አዳዲስ የርዕስ ሃሳቦች ተዘጋጅተዋል!"
+            : "Generated 4 fresh coaching themes!"
+        );
       } else {
         const errorMsg = json.error || "Failed to generate AI ideas";
         toast.error(errorMsg);
@@ -112,10 +265,6 @@ export default function AiCoWriterModal({
       setIsGeneratingIdeas(false);
     }
   };
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   useEffect(() => {
     if (isOpen) {
@@ -141,8 +290,21 @@ export default function AiCoWriterModal({
 
   const handleGenerate = async () => {
     if (!topic.trim()) {
-      toast.error("Please enter a topic or rough notes first");
+      toast.error(
+        language === "am"
+          ? isRefine
+            ? "እባክዎን ማሻሻያ መመሪያዎን ያስገቡ"
+            : "እባክዎን መጀመሪያ የጽሁፉን ርዕስ ወይም ማስታወሻ ያስገቡ"
+          : isRefine
+            ? "Please enter your editing instructions"
+            : "Please enter a topic or rough notes first"
+      );
       return;
+    }
+
+    // Auto-prompt browser notification permission if not yet decided
+    if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "default") {
+      void Notification.requestPermission().then((p) => setNotificationPermission(p));
     }
 
     setLoading(true);
@@ -154,7 +316,9 @@ export default function AiCoWriterModal({
           topic,
           tone,
           targetLength,
+          language,
           existingTitle: currentTitle || undefined,
+          existingContent: isRefine ? (currentContent as EditorContent) : undefined,
         }),
       });
 
@@ -166,7 +330,38 @@ export default function AiCoWriterModal({
 
       setResult(json.data);
       setActiveTab("preview");
-      toast.success("Article drafted by Gemini!");
+
+      // Notify through browser if allowed
+      if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+        try {
+          const notif = new Notification(
+            language === "am" ? "የጽሁፍ ዝግጅት ተጠናቋል! ✍️" : "Article Ready! ✍️",
+            {
+              body:
+                language === "am"
+                  ? `"${json.data.title}" በተሳካ ሁኔታ ተጠናቋል። ለማየትና ለመተግበር እዚህ ይጫኑ!`
+                  : `Gemini has finished ${isRefine ? "refining" : "drafting"} "${json.data.title}". Click to review and apply!`,
+              icon: "/favicon.ico",
+            }
+          );
+          notif.onclick = () => {
+            window.focus();
+            notif.close();
+          };
+        } catch (notifErr) {
+          console.warn("Browser notification error:", notifErr);
+        }
+      }
+
+      toast.success(
+        language === "am"
+          ? isRefine
+            ? "ጽሁፉ በጀሚኒ ተሻሽሏል!"
+            : "ጽሁፉ በጀሚኒ ተዘጋጅቷል!"
+          : isRefine
+            ? "Article refined with Gemini!"
+            : "Article drafted by Gemini!"
+      );
     } catch (err) {
       console.error(err);
       const cleanMessage =
@@ -184,8 +379,8 @@ export default function AiCoWriterModal({
     setIsApplying(true);
 
     try {
-      // 1. Fetch current categories from MongoDB to check what exists
-      const res = await fetch("/api/categories");
+      // 1. Fetch current categories from MongoDB with ?all=true so unpublished/new categories are visible
+      const res = await fetch("/api/categories?all=true");
       const json = await res.json();
       const existingCategories: Array<{ _id: string; name: string; slug: string }> =
         json.success && Array.isArray(json.data) ? json.data : [];
@@ -198,7 +393,7 @@ export default function AiCoWriterModal({
       }
 
       const finalCategoryIds = new Set<string>(result.matchedCategoryIds || []);
-      const newlyCreatedNames: string[] = [];
+      const newlyCreatedDocs: Array<{ _id: string; name: string; slug: string }> = [];
 
       // 2. Resolve or create categories from categorySuggestions if accepting draft
       if (!append && Array.isArray(result.categorySuggestions)) {
@@ -210,6 +405,8 @@ export default function AiCoWriterModal({
           const existingId = categoryMapByName.get(lower) || categoryMapBySlug.get(lower);
           if (existingId) {
             finalCategoryIds.add(existingId);
+            const foundExisting = existingCategories.find((c) => c._id === existingId);
+            if (foundExisting) newlyCreatedDocs.push(foundExisting);
           } else {
             // Create category in MongoDB
             try {
@@ -221,15 +418,22 @@ export default function AiCoWriterModal({
               const createJson = await createRes.json();
               if (createJson.success && createJson.data?._id) {
                 finalCategoryIds.add(createJson.data._id);
-                newlyCreatedNames.push(name);
+                newlyCreatedDocs.push({
+                  _id: createJson.data._id,
+                  name: createJson.data.name || name,
+                  slug: createJson.data.slug || "",
+                });
               } else if (createRes.status === 409) {
-                // Already exists (slug clash), refetch and find ID
-                const refetch = await fetch("/api/categories");
+                // Already exists (slug clash), refetch all and find ID
+                const refetch = await fetch("/api/categories?all=true");
                 const refetchJson = await refetch.json();
-                const found = (refetchJson.data as Array<{ _id: string; name: string }>).find(
+                const found = (refetchJson.data as Array<{ _id: string; name: string; slug: string }>).find(
                   (cat) => cat.name.toLowerCase() === lower
                 );
-                if (found) finalCategoryIds.add(found._id);
+                if (found) {
+                  finalCategoryIds.add(found._id);
+                  newlyCreatedDocs.push(found);
+                }
               }
             } catch (createErr) {
               console.error("Failed to create category:", name, createErr);
@@ -238,9 +442,11 @@ export default function AiCoWriterModal({
         }
       }
 
-      // 3. Dispatch global category refresh so CategorySelector on the page updates its state
-      if (newlyCreatedNames.length > 0) {
-        window.dispatchEvent(new CustomEvent("refresh-categories"));
+      // 3. Dispatch global category refresh with the full document objects for immediate rendering
+      if (newlyCreatedDocs.length > 0) {
+        window.dispatchEvent(
+          new CustomEvent("refresh-categories", { detail: newlyCreatedDocs })
+        );
       }
 
       // 4. Pass resolved and newly created category IDs to blog editor
@@ -253,10 +459,16 @@ export default function AiCoWriterModal({
         append,
       });
 
-      if (newlyCreatedNames.length > 0) {
-        toast.success(`Created & applied categories: ${newlyCreatedNames.join(", ")}`);
+      if (newlyCreatedDocs.length > 0) {
+        toast.success(`Applied & matched categories: ${newlyCreatedDocs.map((c) => c.name).join(", ")}`);
       } else {
-        toast.success(append ? "Appended AI content to editor" : "Applied AI draft to article!");
+        toast.success(
+          append
+            ? "Appended AI content to editor"
+            : isRefine
+              ? "Applied refined article to editor!"
+              : "Applied AI draft to article!"
+        );
       }
 
       onClose();
@@ -313,35 +525,122 @@ export default function AiCoWriterModal({
                 )}
               </div>
               <p className="text-xs text-foreground/60">
-                Generate grounded, empathetic coaching articles with auto-matched categories &amp; resource hovercards.
+                Generate or refine empathetic coaching articles with auto-matched categories &amp; resource hovercards.
               </p>
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg p-1.5 text-foreground/50 hover:bg-surface-muted hover:text-foreground transition cursor-pointer"
-          >
-            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+          <div className="flex items-center gap-2">
+            {/* Notification Permission Indicator */}
+            {notificationPermission === "granted" ? (
+              <span
+                title="Browser notifications active when AI generation finishes"
+                className="hidden sm:inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20"
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span>Alerts On</span>
+              </span>
+            ) : notificationPermission === "default" ? (
+              <button
+                type="button"
+                onClick={handleRequestNotification}
+                title="Enable browser alerts when Gemini finishes drafting"
+                className="hidden sm:inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-[11px] font-medium text-foreground/70 hover:text-foreground hover:bg-surface-muted border border-border/70 transition cursor-pointer"
+              >
+                <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                </svg>
+                <span>Notify me</span>
+              </button>
+            ) : null}
+
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-lg p-1.5 text-foreground/50 hover:bg-surface-muted hover:text-foreground transition cursor-pointer"
+            >
+              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         {/* Modal Body */}
         <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-5">
+          {/* Workflow Mode Tabs (if article content already exists) */}
+          {hasExistingContent && (
+            <div className="flex items-center justify-between rounded-xl border border-border/80 bg-surface-muted/40 p-1.5">
+              <div className="flex gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setWorkflowMode("refine")}
+                  className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition cursor-pointer ${
+                    isRefine
+                      ? "bg-primary text-primary-foreground shadow-xs"
+                      : "text-foreground/70 hover:text-foreground hover:bg-background/50"
+                  }`}
+                >
+                  <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                  </svg>
+                  <span>Edit / Refine Current Article</span>
+                  <span className="rounded px-1.5 py-0.2 text-[9px] font-bold uppercase tracking-wider bg-white/20">
+                    Existing
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setWorkflowMode("draft")}
+                  className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition cursor-pointer ${
+                    !isRefine
+                      ? "bg-primary text-primary-foreground shadow-xs"
+                      : "text-foreground/70 hover:text-foreground hover:bg-background/50"
+                  }`}
+                >
+                  <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z" />
+                  </svg>
+                  <span>Draft Brand New Article</span>
+                </button>
+              </div>
+
+              <span className="text-[11px] text-foreground/50 hidden md:inline px-2">
+                {isRefine
+                  ? "Gemini will improve your current draft"
+                  : "Drafts a completely new post from scratch"}
+              </span>
+            </div>
+          )}
+
           {/* Prompt / Topic Configuration Form */}
           <div className="space-y-4">
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wide text-foreground/70 mb-1.5">
-                Topic, Rough Notes, or Coaching Theme
+                {isRefine
+                  ? language === "am"
+                    ? "የማሻሻያ፣ የለውጥ፣ ወይም የትርጉም መመሪያ"
+                    : "Edit & Refinement Instructions"
+                  : language === "am"
+                    ? "የጽሁፉ ርዕስ፣ ማስታወሻ ወይም ሃሳቦች"
+                    : "Topic, Rough Notes, or Coaching Theme"}
               </label>
               <textarea
                 rows={3}
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
-                placeholder="Type your topic, bullet points, podcast transcript, or client reflection themes..."
+                placeholder={
+                  isRefine
+                    ? language === "am"
+                      ? "ጽሁፉ ላይ ምን እንዲታከል ወይም እንዲሻሻል እንደሚፈልጉ ይጻፉ (ለምሳሌ 'የአተነፋፈስ ልምምዶችን አክብርበት'፣ 'የስሜት እርጋታን አጉላበት'፣ 'በአማርኛ ቀይረው')..."
+                      : "Tell Gemini what to edit, refine, or add (e.g. 'Deepen the somatic practices', 'Rewrite in Amharic', 'Add journaling questions at the end', 'Make the tone more compassionate')..."
+                    : language === "am"
+                      ? "የጽሁፉን ርዕስ፣ ነጥቦች፣ ወይም የትኩረት ሃሳቦች እዚህ ያስገቡ..."
+                      : "Type your topic, bullet points, podcast transcript, or client reflection themes..."
+                }
                 className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground outline-none transition focus:border-primary focus:ring-1 focus:ring-primary resize-y"
               />
             </div>
@@ -351,10 +650,16 @@ export default function AiCoWriterModal({
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-1.5">
                   <span className="text-xs font-semibold text-foreground/85">
-                    Coaching Themes &amp; Prompt Inspiration
+                    {isRefine
+                      ? language === "am"
+                        ? "የማሻሻያ ሃሳቦችና ጥቆማዎች"
+                        : "Editing Directives & Suggestions"
+                      : language === "am"
+                        ? "የጽሁፍ ርዕስ ሃሳቦች (አማርኛ)"
+                        : "Coaching Themes & Prompt Inspiration"}
                   </span>
                   <span className="text-[10px] text-foreground/50 hidden sm:inline">
-                    (click to use)
+                    {language === "am" ? "(ለመምረጥ ይጫኑ)" : "(click to use)"}
                   </span>
                 </div>
 
@@ -362,20 +667,20 @@ export default function AiCoWriterModal({
                   <button
                     type="button"
                     onClick={handleShuffleSuggestions}
-                    title="Shuffle curated coaching themes from library"
+                    title={language === "am" ? "የተመረጡ ሃሳቦችን ቀይር" : "Shuffle curated suggestions from library"}
                     className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-medium text-foreground/75 hover:text-foreground hover:bg-background border border-border/70 transition cursor-pointer shadow-2xs"
                   >
                     <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
-                    <span>Shuffle</span>
+                    <span>{language === "am" ? "ቀይር" : "Shuffle"}</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={handleRegenerateAiIdeas}
                     disabled={isGeneratingIdeas}
-                    title="Generate 4 fresh custom coaching ideas with Gemini AI"
+                    title={language === "am" ? "በጀሚኒ 4 አዳዲስ ሃሳቦችን ፍጠር" : "Generate 4 fresh custom ideas with Gemini AI"}
                     className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold text-primary bg-primary/10 hover:bg-primary/20 border border-primary/30 transition cursor-pointer disabled:opacity-50 shadow-2xs"
                   >
                     <svg
@@ -385,7 +690,15 @@ export default function AiCoWriterModal({
                     >
                       <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z" />
                     </svg>
-                    <span>{isGeneratingIdeas ? "Generating..." : "Regenerate Ideas (AI)"}</span>
+                    <span>
+                      {isGeneratingIdeas
+                        ? language === "am"
+                          ? "በማዘጋጀት ላይ..."
+                          : "Generating..."
+                        : language === "am"
+                          ? "አዳዲስ ሃሳቦች (AI)"
+                          : "Regenerate Ideas (AI)"}
+                    </span>
                   </button>
                 </div>
               </div>
@@ -395,7 +708,11 @@ export default function AiCoWriterModal({
                   <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z" />
                   </svg>
-                  <span>Gemini is generating 4 fresh coaching themes...</span>
+                  <span>
+                    {language === "am"
+                      ? "ጀሚኒ 4 አዳዲስ ሃሳቦችን እያዘጋጀ ነው..."
+                      : "Gemini is generating 4 fresh suggestions..."}
+                  </span>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -407,7 +724,7 @@ export default function AiCoWriterModal({
                         type="button"
                         onClick={() => {
                           setTopic(promptText);
-                          toast.success("Loaded theme into topic!");
+                          toast.success(language === "am" ? "ሃሳቡ ተመርጧል!" : "Loaded into prompt!");
                         }}
                         className={`group flex items-start gap-2 rounded-xl p-2.5 text-left text-xs transition cursor-pointer border ${
                           isSelected
@@ -428,8 +745,26 @@ export default function AiCoWriterModal({
               )}
             </div>
 
-            {/* Controls Row: Tone & Length */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+            {/* Controls Row: Language, Tone & Length */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 pt-2">
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wide text-foreground/70 mb-1.5 flex items-center justify-between">
+                  <span>Language / ቋንቋ</span>
+                  <span className="text-[10px] text-primary font-normal">{language === "am" ? "አማርኛ" : "English"}</span>
+                </label>
+                <select
+                  value={language}
+                  onChange={(e) => {
+                    const nextLang = e.target.value as "en" | "am";
+                    setLanguage(nextLang);
+                  }}
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs font-medium text-foreground outline-none focus:border-primary"
+                >
+                  <option value="en">English (Default)</option>
+                  <option value="am">Amharic (አማርኛ)</option>
+                </select>
+              </div>
+
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wide text-foreground/70 mb-1.5">
                   Coaching Tone &amp; Voice
@@ -481,14 +816,30 @@ export default function AiCoWriterModal({
                     <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m0 14v1m8-8h-1M5 12H4m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707" />
                     </svg>
-                    <span>Gemini is generating post...</span>
+                    <span>
+                      {language === "am"
+                        ? isRefine
+                          ? "ጀሚኒ ጽሁፉን እያሻሻለ ነው..."
+                          : "ጀሚኒ ጽሁፉን በማዘጋጀት ላይ ነው..."
+                        : isRefine
+                          ? "Gemini is refining article..."
+                          : "Gemini is generating post..."}
+                    </span>
                   </>
                 ) : (
                   <>
                     <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M12 3v3m0 12v3M3 12h3m12 0h3M5.6 5.6l2.1 2.1m8.6 8.6l2.1 2.1M5.6 18.4l2.1-2.1m8.6-8.6l2.1-2.1" />
                     </svg>
-                    <span>Draft Article with Gemini</span>
+                    <span>
+                      {isRefine
+                        ? language === "am"
+                          ? "በጀሚኒ ጽሁፉን አሻሽል"
+                          : "Refine Article with Gemini"
+                        : language === "am"
+                          ? "በጀሚኒ ጽሁፍ አዘጋጅ"
+                          : "Draft Article with Gemini"}
+                    </span>
                   </>
                 )}
               </button>
@@ -498,40 +849,54 @@ export default function AiCoWriterModal({
           {/* Result Inspection Section */}
           {result && (
             <div className="border-t border-border/80 pt-5 space-y-4">
-              {/* Draft Complete Status Banner */}
-              <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3.5 sm:p-4 text-emerald-800 dark:text-emerald-200 animate-in fade-in slide-in-from-top-2 duration-300">
-                <div className="flex items-center gap-2.5">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500 text-white shadow-xs shrink-0">
-                    <svg className="h-4.5 w-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              {/* High-Contrast Draft Complete Status Banner */}
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-emerald-600/40 bg-emerald-500/15 dark:bg-emerald-950/50 p-4 text-foreground shadow-xs animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-sm shrink-0">
+                    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <h4 className="text-sm font-semibold">
-                        Draft Complete &amp; Ready for Review
+                      <h4 className="text-sm font-bold text-emerald-950 dark:text-emerald-100">
+                        {isRefine
+                          ? language === "am"
+                            ? "የጽሁፉ ማሻሻያ ተጠናቋል!"
+                            : "Article Refinement Complete & Ready"
+                          : language === "am"
+                            ? "የጽሁፉ ዝግጅት ተጠናቋል!"
+                            : "Draft Complete & Ready for Review"}
                       </h4>
-                      <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
-                        Generated
+                      <span className="rounded-full bg-emerald-600/20 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-900 dark:text-emerald-200 border border-emerald-600/30">
+                        {isRefine
+                          ? language === "am"
+                            ? "ተሻሽሏል"
+                            : "Refined"
+                          : language === "am"
+                            ? "ተዘጋጅቷል"
+                            : "Generated"}
                       </span>
                     </div>
-                    <p className="text-xs opacity-85">
-                      Review below. Clicking &ldquo;Apply Everything&rdquo; auto-creates suggested categories and applies the content.
+                    <p className="text-xs font-semibold text-emerald-900/95 dark:text-emerald-200 mt-0.5">
+                      {language === "am"
+                        ? "ከታች ያለውን ረቂቅ ይገምግሙ። «ሁሉንም ተግብር» ሲጫኑ የተጠቆሙ ምድቦች ተፈጥረው ጽሁፉ ይተገበራል።"
+                        : "Review below. Clicking \"Apply Everything\" auto-creates suggested categories and applies the content."}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-1.5 text-xs font-medium">
-                  <span className="rounded-lg bg-background/80 px-2.5 py-1 text-foreground border border-border/60 shadow-2xs">
+                <div className="flex flex-wrap items-center gap-1.5 text-xs font-semibold">
+                  <span className="rounded-lg bg-background/90 px-2.5 py-1 text-foreground border border-border/80 shadow-2xs">
                     {result.content.blocks.length} blocks
                   </span>
                   {result.categorySuggestions?.length > 0 && (
-                    <span className="rounded-lg bg-background/80 px-2.5 py-1 text-foreground border border-border/60 shadow-2xs">
+                    <span className="rounded-lg bg-background/90 px-2.5 py-1 text-foreground border border-border/80 shadow-2xs">
                       {result.categorySuggestions.length} categories
                     </span>
                   )}
                   {result.matchedResourceIds?.length > 0 && (
-                    <span className="rounded-lg bg-background/80 px-2.5 py-1 text-foreground border border-border/60 shadow-2xs">
+                    <span className="rounded-lg bg-background/90 px-2.5 py-1 text-foreground border border-border/80 shadow-2xs">
                       {result.matchedResourceIds.length} resources cited
                     </span>
                   )}
@@ -572,7 +937,12 @@ export default function AiCoWriterModal({
 
               {/* Tab 1: Preview Body via <Renderer /> */}
               {activeTab === "preview" && (
-                <div className="rounded-xl border border-border/80 bg-background p-4 sm:p-6 space-y-4 max-h-[360px] overflow-y-auto">
+                <div
+                  className={`rounded-xl border border-border/80 bg-background p-4 sm:p-6 space-y-4 max-h-[360px] overflow-y-auto ${
+                    language === "am" ? "font-amharic" : ""
+                  }`}
+                  lang={language}
+                >
                   <h1 className="text-2xl font-bold leading-tight">{result.title}</h1>
                   <p className="text-xs text-foreground/60 italic border-l-2 border-primary/50 pl-3">
                     {result.excerpt}
@@ -687,14 +1057,18 @@ export default function AiCoWriterModal({
                         <svg className="h-3.5 w-3.5 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m0 14v1m8-8h-1M5 12H4m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707" />
                         </svg>
-                        <span>Applying &amp; Creating Categories...</span>
+                        <span>Applying &amp; Matching Categories...</span>
                       </>
                     ) : (
                       <>
                         <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                         </svg>
-                        <span>Apply Everything (Title, Excerpt, Content &amp; Categories)</span>
+                        <span>
+                          {isRefine
+                            ? "Apply Refined Article & Categories"
+                            : "Apply Everything (Title, Excerpt, Content & Categories)"}
+                        </span>
                       </>
                     )}
                   </button>

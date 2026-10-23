@@ -6,6 +6,8 @@ import { Category } from "@/models/Category";
 
 // POST /api/admin/categories
 export async function POST(req: NextRequest) {
+  let body: { name?: string } | null = null;
+
   try {
     const session = await getServerSession(authOptions);
 
@@ -18,8 +20,8 @@ export async function POST(req: NextRequest) {
 
     await connectDB();
 
-    const body = await req.json();
-    const { name } = body;
+    body = await req.json();
+    const name = body?.name;
 
     if (!name || typeof name !== "string") {
       return NextResponse.json(
@@ -36,7 +38,7 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     );
   } catch (error: unknown) {
-    // Handle duplicate slug error (unique index)
+    // Handle duplicate slug or name error (unique index)
     interface MongoError {
       code?: number;
     }
@@ -46,6 +48,28 @@ export async function POST(req: NextRequest) {
       "code" in error &&
       (error as MongoError).code === 11000
     ) {
+      try {
+        const targetName = typeof body?.name === "string" ? body.name.trim() : "";
+        if (targetName) {
+          const escaped = targetName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+          const existingCategory = await Category.findOne({
+            $or: [
+              { name: { $regex: `^${escaped}$`, $options: "i" } },
+              { slug: targetName.toLowerCase().replace(/[^\p{L}\p{N}\s-]/gu, "").replace(/\s+/g, "-") },
+            ],
+          }).lean();
+
+          if (existingCategory) {
+            return NextResponse.json(
+              { success: true, data: existingCategory, alreadyExisted: true },
+              { status: 200 }
+            );
+          }
+        }
+      } catch {
+        // fallback to standard 409 response
+      }
+
       return NextResponse.json(
         { success: false, error: "Category already exists" },
         { status: 409 }

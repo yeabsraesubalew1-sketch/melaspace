@@ -169,7 +169,7 @@ export function processBlogContent(content: EditorContent) {
 export function slugify(text: string) {
   return stripHtml(text)
     .toLowerCase()
-    .replace(/[^\w\s-]/g, "")
+    .replace(/[^\p{L}\p{N}\s-]/gu, "")
     .trim()
     .replace(/\s+/g, "-");
 }

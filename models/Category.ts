@@ -1,11 +1,13 @@
 import { Schema, model, models } from "mongoose";
 
 function slugify(text: string) {
-  return text
+  const cleaned = text
     .toLowerCase()
     .trim()
-    .replace(/[^\w\s-]/g, "")
-    .replace(/\s+/g, "-");
+    .replace(/[^\p{L}\p{N}\s-]/gu, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+  return cleaned || `category-${Date.now().toString(36)}`;
 }
 
 const CategorySchema = new Schema(
@@ -26,7 +28,7 @@ const CategorySchema = new Schema(
 
 // Auto-generate slug before save
 CategorySchema.pre("save", function () {
-  if (this.isModified("name")) {
+  if (this.isModified("name") || !this.slug) {
     this.slug = slugify(this.name);
   }
 });

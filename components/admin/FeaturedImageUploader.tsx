@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useId } from "react";
+import { useState, useRef } from "react";
 import toast from "react-hot-toast";
 import type { FeaturedImage } from "@/types/api";
 
@@ -9,6 +9,7 @@ interface Props {
   onChange: (image: FeaturedImage | null) => void;
   title?: string;
   disabled?: boolean;
+  id?: string;
 }
 
 // Curated SVG gradient presets for one-click branded covers
@@ -49,8 +50,8 @@ export default function FeaturedImageUploader({
   onChange,
   title,
   disabled = false,
+  id,
 }: Props) {
-  const fileInputId = useId();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [isUploading, setIsUploading] = useState(false);
@@ -191,7 +192,7 @@ export default function FeaturedImageUploader({
 
       <input
         ref={fileInputRef}
-        id={fileInputId}
+        id={id}
         type="file"
         accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
         className="hidden"

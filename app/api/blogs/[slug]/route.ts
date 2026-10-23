@@ -31,11 +31,12 @@ export async function GET(
 ) {
   try {
     const { slug } = await params;
+    const decodedSlug = decodeURIComponent(slug);
 
     await connectDB();
 
     const blog = await Blog.findOne({
-      slug,
+      $or: [{ slug }, { slug: decodedSlug }],
       status: "published",
     })
       .populate("categories", "_id name slug")
