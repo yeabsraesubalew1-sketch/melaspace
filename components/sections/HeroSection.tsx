@@ -76,7 +76,7 @@ export default function HeroSection() {
           >
             <div className="flex items-start justify-between gap-5">
               <div>
-                <p className="text-sm font-medium text-foreground/60">What this space helps with</p>
+                <h2 className="text-sm font-medium text-foreground/60">What this space helps with</h2>
                 <p className="mt-2 max-w-sm text-sm leading-relaxed text-foreground/70">
                   Simple, grounded support for people who want a clearer way
                   to think, feel, and move forward.

@@ -38,6 +38,7 @@ interface Blog {
   slug: string;
   excerpt: string;
   publishedAt?: string;
+  updatedAt?: string;
   categories: {
     _id: string;
     name: string;
@@ -74,12 +75,18 @@ export async function generateMetadata({
   if (!blog) {
     return {
       title: "Blog not found",
+      robots: {
+        index: false,
+        follow: false,
+      },
     };
   }
 
+  const isDataUri = Boolean(blog.featuredImage?.url?.startsWith("data:"));
   const ogImageUrl =
-    blog.featuredImage?.url ||
-    absoluteUrl(`/api/og/blog?slug=${encodeURIComponent(blog.slug)}&v=${OG_IMAGE_VERSION}`);
+    blog.featuredImage?.url && !isDataUri
+      ? blog.featuredImage.url
+      : absoluteUrl(`/api/og/blog?slug=${encodeURIComponent(blog.slug)}&v=${OG_IMAGE_VERSION}`);
 
   return {
     title: blog.title,
@@ -119,11 +126,6 @@ export async function generateMetadata({
   };
 }
 
-const blogBreadcrumbJsonLd = breadcrumbSchema([
-  { name: "Home", path: "/" },
-  { name: "Blog", path: "/blogs" },
-]);
-
 const getBlog = cache(async (slug: string): Promise<Blog | null> => {
   try {
     const res = await fetch(
@@ -145,6 +147,45 @@ const getBlog = cache(async (slug: string): Promise<Blog | null> => {
   }
 });
 
+async function getRelatedBlogs(currentSlug: string, categorySlug?: string) {
+  try {
+    if (categorySlug) {
+      const query = new URLSearchParams({
+        limit: "4",
+        category: categorySlug,
+      });
+
+      const res = await fetch(`${getBaseUrl()}/api/blogs?${query.toString()}`, {
+        next: { revalidate: 60 },
+      });
+
+      if (res.ok) {
+        const json = await res.json();
+        if (Array.isArray(json?.data)) {
+          const filtered = json.data.filter((b: { slug: string }) => b.slug !== currentSlug);
+          if (filtered.length > 0) {
+            return filtered.slice(0, 3);
+          }
+        }
+      }
+    }
+
+    // Fallback: fetch latest published articles if no other post exists in the specific category
+    const fallbackRes = await fetch(`${getBaseUrl()}/api/blogs?limit=4`, {
+      next: { revalidate: 60 },
+    });
+
+    if (!fallbackRes.ok) return [];
+
+    const fallbackJson = await fallbackRes.json();
+    if (!Array.isArray(fallbackJson?.data)) return [];
+
+    return fallbackJson.data.filter((b: { slug: string }) => b.slug !== currentSlug).slice(0, 3);
+  } catch {
+    return [];
+  }
+}
+
 interface Props {
   params: Promise<{
     slug: string;
@@ -165,25 +206,55 @@ export default async function BlogPage({ params }: Props) {
   const { readingTime, toc } = processBlogContent(blog.content);
   const authorName = blog.authorName || blog.author?.name || "Mela Team";
 
+  const isDataUri = Boolean(blog.featuredImage?.url?.startsWith("data:"));
+  const ogImageUrl =
+    blog.featuredImage?.url && !isDataUri
+      ? blog.featuredImage.url
+      : absoluteUrl(`/api/og/blog?slug=${encodeURIComponent(blog.slug)}&v=${OG_IMAGE_VERSION}`);
+
+  const primaryCategory = blog.categories && blog.categories.length > 0 ? blog.categories[0] : null;
+
+  const relatedBlogs = await getRelatedBlogs(
+    blog.slug,
+    primaryCategory?.slug
+  );
+
+  const blogBreadcrumbJsonLd = breadcrumbSchema([
+    { name: "Home", path: "/" },
+    { name: "Blog", path: "/blogs" },
+    ...(primaryCategory?.slug
+      ? [{ name: primaryCategory.name, path: `/blogs?category=${encodeURIComponent(primaryCategory.slug)}` }]
+      : []),
+    { name: blog.title, path: `/blogs/${blog.slug}` },
+  ]);
+
   const articleJsonLd = {
     "@context": "https://schema.org",
-    "@type": "Article",
+    "@type": "BlogPosting",
     headline: blog.title,
     description: blog.excerpt,
     url: absoluteUrl(`/blogs/${blog.slug}`),
+    image: [ogImageUrl],
     datePublished: blog.publishedAt,
+    dateModified: blog.updatedAt || blog.publishedAt,
     author: {
       "@type": "Person",
       name: authorName,
+      url: absoluteUrl("/about"),
     },
     publisher: {
       "@type": "Organization",
       name: seoConfig.siteName,
+      logo: {
+        "@type": "ImageObject",
+        url: absoluteUrl("/icon.svg"),
+      },
     },
-    articleSection: "Blog",
+    articleSection: primaryCategory?.name || "Blog",
     keywords: blog.categories?.map((cat) => cat.name) ?? [],
     timeRequired: `PT${readingTime}M`,
     mainEntityOfPage: absoluteUrl(`/blogs/${blog.slug}`),
+    inLanguage: "en",
   };
 
   const formattedDate = blog.publishedAt
@@ -432,6 +503,69 @@ export default async function BlogPage({ params }: Props) {
 
             {/* Linked Downloadable Resources & Decks */}
             <LinkedResourcesModule resources={blog.linkedResources} />
+
+            {/* Related Articles Module */}
+            {relatedBlogs.length > 0 && (
+              <section className="mt-14 pt-10 border-t border-border space-y-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-xs font-bold uppercase tracking-wider text-primary">
+                      Keep Reading
+                    </span>
+                    <h2 className="text-2xl font-bold tracking-tight text-foreground mt-1">
+                      Related Articles
+                    </h2>
+                  </div>
+                  <Link
+                    href="/blogs"
+                    className="text-xs font-semibold text-primary hover:underline"
+                  >
+                    View all &rarr;
+                  </Link>
+                </div>
+
+                <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                  {relatedBlogs.map((item: {
+                    id: string;
+                    title: string;
+                    slug: string;
+                    excerpt?: string;
+                    authorName?: string;
+                    featuredImage?: { url: string; alt?: string };
+                  }) => (
+                    <Link
+                      key={item.id}
+                      href={`/blogs/${item.slug}`}
+                      className="group flex flex-col justify-between rounded-xl border border-border bg-surface-muted/40 p-4 transition-all hover:-translate-y-0.5 hover:shadow-md"
+                    >
+                      <div className="space-y-2">
+                        {item.featuredImage?.url && (
+                          <div className="relative aspect-16/9 w-full overflow-hidden rounded-lg bg-surface-muted">
+                            <img
+                              src={normalizeMediaUrl(item.featuredImage.url)}
+                              alt={item.featuredImage.alt || item.title}
+                              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                            />
+                          </div>
+                        )}
+                        <h3 className="font-semibold text-sm text-foreground group-hover:text-primary transition-colors line-clamp-2">
+                          {item.title}
+                        </h3>
+                        {item.excerpt && (
+                          <p className="text-xs text-foreground/70 line-clamp-2">
+                            {item.excerpt}
+                          </p>
+                        )}
+                      </div>
+                      <div className="mt-3 pt-2 border-t border-border/50 text-[11px] text-foreground/50 flex justify-between">
+                        <span>{item.authorName || "Mela Team"}</span>
+                        <span className="text-primary font-medium">Read &rarr;</span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            )}
           </article>
         </div>
       </div>

@@ -32,6 +32,7 @@ interface BuildPageMetadataOptions {
 	path?: string;
 	type?: "website" | "article";
 	noIndex?: boolean;
+	isExactTitle?: boolean;
 }
 
 export function buildPageMetadata({
@@ -40,11 +41,13 @@ export function buildPageMetadata({
 	path = "/",
 	type = "website",
 	noIndex = false,
+	isExactTitle = false,
 }: BuildPageMetadataOptions): Metadata {
 	const imageUrl = absoluteUrl(`/opengraph-image?v=${OG_IMAGE_VERSION}`);
+	const shouldBeAbsolute = isExactTitle || path === "/";
 
 	return {
-		title,
+		title: shouldBeAbsolute ? { absolute: title } : title,
 		description,
 		alternates: {
 			canonical: path,
@@ -81,6 +84,7 @@ export function buildPageMetadata({
 
 export const seoConfig = {
 	siteName: SITE_NAME,
+	defaultTitle: `${SITE_NAME} - Calm Coaching, Clarity & Growth`,
 	defaultDescription: DEFAULT_DESCRIPTION,
 };
 
@@ -96,3 +100,49 @@ export function breadcrumbSchema(items: { name: string; path: string }[]) {
 		})),
 	};
 }
+
+export function organizationSchema() {
+	return {
+		"@context": "https://schema.org",
+		"@type": "Organization",
+		name: SITE_NAME,
+		alternateName: ["መላ ስፔስ", "MelaSpace", "Mela"],
+		url: absoluteUrl("/"),
+		logo: absoluteUrl("/icon.svg"),
+		description: DEFAULT_DESCRIPTION,
+		founder: {
+			"@type": "Person",
+			name: "Dr. Simret E. Tesfahun",
+			jobTitle: "Founder & Coach",
+			url: absoluteUrl("/about"),
+		},
+		sameAs: [
+			"https://t.me/DrSimaEsu",
+			"https://www.instagram.com/sima_esu",
+			"https://www.youtube.com/@simretesubalew",
+			"https://www.tiktok.com/@simretesubalew",
+			"https://t.me/SimaEsubooks",
+			"https://t.me/PageTurnersBookClubEthiopia",
+		],
+	};
+}
+
+export function webSiteSchema() {
+	return {
+		"@context": "https://schema.org",
+		"@type": "WebSite",
+		name: SITE_NAME,
+		alternateName: ["መላ ስፔስ", "MelaSpace"],
+		url: absoluteUrl("/"),
+		description: DEFAULT_DESCRIPTION,
+		potentialAction: {
+			"@type": "SearchAction",
+			target: {
+				"@type": "EntryPoint",
+				urlTemplate: `${absoluteUrl("/blogs")}?q={search_term_string}`,
+			},
+			"query-input": "required name=search_term_string",
+		},
+	};
+}
+

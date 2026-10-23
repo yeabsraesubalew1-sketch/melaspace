@@ -77,19 +77,19 @@
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
     overflow-x: clip;
-    font-family: inherit, var(--font-kewti-selam), var(--font-noto-ethiopic), "Nyala", "Kefa", sans-serif;
+    font-family: inherit, var(--font-noto-ethiopic), "Nyala", "Kefa", sans-serif;
   }
 
   h1,
   h2 {
-    font-family: var(--font-brand-heading), var(--font-kewti-selam), var(--font-noto-ethiopic), "Nyala", "Times New Roman", serif;
+    font-family: var(--font-brand-heading), var(--font-noto-ethiopic), "Nyala", "Times New Roman", serif;
     letter-spacing: -0.01em;
   }
 
   /* Optimal Ethiopic reading cadence and line height */
   [lang="am"],
   .font-amharic {
-    font-family: var(--font-kewti-selam), var(--font-noto-ethiopic), "Nyala", "Kefa", sans-serif;
+    font-family: var(--font-noto-ethiopic), "Nyala", "Kefa", sans-serif;
     line-height: 1.85;
   }
 }

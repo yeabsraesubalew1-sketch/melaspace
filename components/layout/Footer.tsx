@@ -105,14 +105,14 @@ export default function Footer() {
           
           <p>© {new Date().getFullYear()} Mela Space. All rights reserved.</p>
 
-          {/* <div className="flex gap-4">
-            <Link href="#" className="hover:text-foreground transition">
+          <div className="flex gap-5">
+            <Link href="/terms" className="hover:text-foreground transition">
               Terms
             </Link>
-            <Link href="#" className="hover:text-foreground transition">
+            <Link href="/privacy" className="hover:text-foreground transition">
               Privacy
             </Link>
-          </div> */}
+          </div>
 
         </div>
       </div>

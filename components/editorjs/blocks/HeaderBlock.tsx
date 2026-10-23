@@ -10,18 +10,18 @@ interface Props {
 export default function HeaderBlock({ block, id }: Props) {
   const { level, text } = block.data;
   const resolvedId = id ?? "section";
-  const safeLevel = Math.min(Math.max(level, 1), 6) as 1 | 2 | 3 | 4 | 5 | 6;
+  // Enforce minimum h2 inside blog body to ensure page h1 remains unique
+  const safeLevel = Math.min(Math.max(level, 2), 6) as 2 | 3 | 4 | 5 | 6;
 
   const Tag = `h${safeLevel}` as ElementType;
 
-  const sizeMap = {
-    1: "text-4xl",
+  const sizeMap: Record<number, string> = {
     2: "text-3xl",
     3: "text-2xl",
     4: "text-xl",
     5: "text-lg",
     6: "text-base",
-  } as const;
+  };
 
   return (
     <Tag

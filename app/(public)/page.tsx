@@ -9,7 +9,7 @@ import FinalCTASection from "@/components/sections/FinalCTASection";
 import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata = buildPageMetadata({
-  title: "Mela Space",
+  title: "Mela Space - A Step Towards Clarity",
   description:
     "Mela Space helps creators and founders grow with clarity through practical strategy, content systems, and coaching.",
   path: "/",

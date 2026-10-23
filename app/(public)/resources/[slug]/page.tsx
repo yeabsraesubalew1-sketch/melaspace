@@ -53,11 +53,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const resource = await Resource.findOne(query).select("title excerpt coverImage category").lean();
 
   if (!resource) {
-    return { title: "Resource not found" };
+    return {
+      title: "Resource not found",
+      robots: {
+        index: false,
+        follow: false,
+      },
+    };
   }
 
+  const imageUrl = resource.coverImage?.url;
+
   return {
-    title: `${resource.title} | Mela Resource Hub`,
+    title: `${resource.title} | Resource Hub`,
     description: resource.excerpt,
     alternates: {
       canonical: `/resources/${slug}`,
@@ -68,7 +76,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       type: "website",
       siteName: seoConfig.siteName,
       url: `/resources/${slug}`,
-      images: resource.coverImage?.url ? [{ url: resource.coverImage.url }] : undefined,
+      images: imageUrl ? [{ url: imageUrl }] : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${resource.title} | Resource Hub`,
+      description: resource.excerpt,
+      images: imageUrl ? [imageUrl] : undefined,
     },
   };
 }
@@ -116,14 +130,23 @@ export default async function SingleResourcePage({ params }: Props) {
     name: resource.title,
     description: resource.excerpt,
     url: absoluteUrl(`/resources/${resource.slug}`),
+    image: resource.coverImage?.url ? [resource.coverImage.url] : undefined,
     datePublished: resource.createdAt.toISOString(),
+    dateModified: resource.updatedAt.toISOString(),
+    isAccessibleForFree: true,
+    fileFormat: files[0]?.mimeType || "application/pdf",
     author: {
-      "@type": "Organization",
+      "@type": "Person",
       name: resource.authorName || "Mela Team",
+      url: absoluteUrl("/about"),
     },
     publisher: {
       "@type": "Organization",
       name: seoConfig.siteName,
+      logo: {
+        "@type": "ImageObject",
+        url: absoluteUrl("/icon.svg"),
+      },
     },
   };
 

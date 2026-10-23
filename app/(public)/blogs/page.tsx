@@ -5,23 +5,9 @@ import Pagination from "@/components/blog/Pagination";
 import CategoryQueryGuard from "@/components/blog/CategoryQueryGuard";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { buildPageMetadata, breadcrumbSchema } from "@/lib/seo";
+import { buildPageMetadata, breadcrumbSchema, getBaseUrl } from "@/lib/seo";
 import { warmFileVaultConnection } from "@/lib/filevault";
 import { normalizeMediaUrl } from "@/lib/media";
-
-function getBaseUrl() {
-  const envBaseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? process.env.NEXTAUTH_URL;
-
-  if (envBaseUrl) {
-    return envBaseUrl;
-  }
-
-  if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}`;
-  }
-
-  return "http://localhost:3000";
-}
 
 interface Blog {
   id: string;
@@ -70,20 +56,29 @@ export async function generateMetadata({
   const page = Math.max(1, Number(pageParam ?? "1") || 1);
   const q = qParam?.trim() ?? "";
   const category = categoryParam?.trim() ?? "";
-  const hasVariantQuery = Boolean(q || category || page > 1);
 
-  const titleSuffix = category
-    ? ` - ${category}`
+  // Only noindex search query results or deep pagination (> page 1)
+  const shouldNoIndex = Boolean(q || page > 1);
+
+  const formattedCategory = category
+    ? category.split("-").map((s) => s.charAt(0).toUpperCase() + s.slice(1)).join(" ")
+    : "";
+
+  const title = category
+    ? `${formattedCategory} Articles`
     : q
-      ? ` - Search: ${q}`
-      : "";
+      ? `Blog Search: ${q}`
+      : "Blog";
+
+  const description = category
+    ? `Explore ${formattedCategory.toLowerCase()} articles, guides, and practical frameworks on Mela Space.`
+    : "Read articles and practical breakdowns on strategy, content, and creator systems.";
 
   return buildPageMetadata({
-    title: `Blog${titleSuffix}`,
-    description:
-      "Read articles and practical breakdowns on strategy, content, and creator systems.",
-    path: "/blogs",
-    noIndex: hasVariantQuery,
+    title,
+    description,
+    path: category && !q && page === 1 ? `/blogs?category=${encodeURIComponent(category)}` : "/blogs",
+    noIndex: shouldNoIndex,
   });
 }
 

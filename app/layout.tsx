@@ -3,7 +3,7 @@ import { Cormorant_Garamond, Manrope, Noto_Sans_Ethiopic } from "next/font/googl
 import localFont from "next/font/local";
 import { Toaster } from "react-hot-toast";
 import type { Metadata } from "next";
-import { getBaseUrl, seoConfig } from "@/lib/seo";
+import { getBaseUrl, seoConfig, organizationSchema, webSiteSchema } from "@/lib/seo";
 
 const manrope = Manrope({
 	subsets: ["latin"],
@@ -32,7 +32,7 @@ const notoEthiopic = Noto_Sans_Ethiopic({
 export const metadata: Metadata = {
 	metadataBase: new URL(getBaseUrl()),
 	title: {
-		default: seoConfig.siteName,
+		default: seoConfig.defaultTitle,
 		template: `%s | ${seoConfig.siteName}`,
 	},
 	description: seoConfig.defaultDescription,
@@ -66,6 +66,14 @@ export default function RootLayout({
 			<head>
 				<link rel="preconnect" href="https://website-973c67d0.zvl.obd.mybluehost.me" crossOrigin="anonymous" />
 				<link rel="dns-prefetch" href="https://website-973c67d0.zvl.obd.mybluehost.me" />
+				<script
+					type="application/ld+json"
+					dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema()) }}
+				/>
+				<script
+					type="application/ld+json"
+					dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteSchema()) }}
+				/>
 			</head>
 			<body className={`${manrope.className} ${cormorant.variable} ${selam.variable} ${notoEthiopic.variable} min-h-screen bg-background text-foreground`}>
 				<AuthProvider>
