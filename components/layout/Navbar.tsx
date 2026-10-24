@@ -71,36 +71,51 @@ export default function Navbar() {
         className={cn(
           "fixed top-0 left-0 w-full z-40 transition-all duration-300",
           scrolled
-            ? "backdrop-blur-md bg-background/80 border-b border-border shadow-xs"
+            ? "backdrop-blur-md bg-background/85 border-b border-border/70 shadow-xs"
             : "bg-transparent"
         )}
       >
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3.5">
-          {/* Logo */}
+          {/* Logo with Brand Clarity Mark */}
           <Link
             href="/"
-            className="text-lg font-semibold tracking-tight transition hover:opacity-85"
+            className="group flex items-center gap-2.5 transition"
             onClick={() => setMobileOpen(false)}
           >
-            Mela Space
+            <div className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-xs transition group-hover:scale-105">
+              <svg viewBox="0 0 64 64" fill="none" className="h-5 w-5" aria-hidden="true">
+                <circle cx="32" cy="32" r="19" stroke="#c9976b" strokeWidth="3" opacity="0.5" />
+                <circle cx="32" cy="32" r="11" stroke="#f5e6d3" strokeWidth="3.5" />
+                <circle cx="32" cy="32" r="4" fill="#f5e6d3" />
+              </svg>
+            </div>
+            <span className="text-lg font-semibold tracking-tight text-foreground transition group-hover:opacity-85">
+              Mela Space
+            </span>
           </Link>
 
           {/* Desktop Nav Links */}
-          <nav className="hidden md:flex items-center gap-7 text-sm text-foreground/80">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={cn(
-                  "transition border-b-2 pb-0.5",
-                  isActive(link.href)
-                    ? "text-foreground border-foreground/70 font-medium"
-                    : "border-transparent hover:text-foreground hover:border-foreground/20"
-                )}
-              >
-                {link.label}
-              </Link>
-            ))}
+          <nav className="hidden md:flex items-center gap-7 text-sm">
+            {navLinks.map((link) => {
+              const active = isActive(link.href);
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={cn(
+                    "relative py-1 text-sm font-medium transition-colors",
+                    active
+                      ? "text-foreground"
+                      : "text-foreground/70 hover:text-foreground"
+                  )}
+                >
+                  {link.label}
+                  {active && (
+                    <span className="absolute inset-x-0 -bottom-1 h-0.5 rounded-full bg-accent" />
+                  )}
+                </Link>
+              );
+            })}
           </nav>
 
           {/* Right Action / Auth Button */}

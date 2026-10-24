@@ -1,4 +1,5 @@
 import BlogCard from "@/components/blog/BlogCard";
+import FeaturedBlogHero from "@/components/blog/FeaturedBlogHero";
 import CategoryPills from "@/components/blog/CategoryPills";
 import SearchInput from "@/components/blog/SearchInput";
 import Pagination from "@/components/blog/Pagination";
@@ -152,14 +153,32 @@ export default async function BlogsPage({
     totalPages: Math.max(1, Number(blogsRes?.meta?.totalPages) || 1),
   };
 
+  // Determine if a spotlight hero story should be highlighted at the top
+  const spotlightBlog =
+    !hasFilters && page === 1 && blogs.length > 0
+      ? blogs.find((b) => b.isPinned) || blogs[0]
+      : null;
+
+  // Remaining articles for the grid
+  const gridBlogs = spotlightBlog
+    ? blogs.filter((b) => b.id !== spotlightBlog.id)
+    : blogs;
+
   // Find first card with featured image to preload its image
   const firstFeatured = blogs.find((b) => b.featuredImage?.url);
   const preloadImageUrl = firstFeatured?.featuredImage?.url
     ? normalizeMediaUrl(firstFeatured.featuredImage.url)
     : null;
 
+  const formattedCategory = category
+    ? category
+        .split("-")
+        .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
+        .join(" ")
+    : "";
+
   return (
-    <main className="mx-auto max-w-6xl px-4 pb-10 pt-20 sm:px-6 sm:pb-12 sm:pt-24">
+    <main className="mx-auto max-w-6xl px-4 pb-16 pt-24 sm:px-6 sm:pb-20 sm:pt-32">
       {preloadImageUrl && (
         <link rel="preload" as="image" href={preloadImageUrl} />
       )}
@@ -169,13 +188,26 @@ export default async function BlogsPage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(blogsBreadcrumbJsonLd) }}
       />
 
-      {/* Page header */}
-      <div className="mb-8 sm:mb-10">
-        <h1 className="mb-3 text-3xl font-bold sm:text-4xl">
-          Blog
+      {/* Editorial Page Header */}
+      <div className="mb-10 sm:mb-12 space-y-4 max-w-3xl">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border/80 bg-surface-muted text-xs font-semibold uppercase tracking-wider text-primary">
+          <span>Mela Publications</span>
+        </div>
+
+        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight text-foreground leading-tight">
+          {formattedCategory
+            ? `${formattedCategory} Articles`
+            : q
+            ? `Search Results`
+            : "Thoughts, Neuroscience & Clarity"}
         </h1>
-        <p className="opacity-70">
-          Articles, tutorials, and thoughts.
+
+        <p className="text-base sm:text-lg text-foreground/75 leading-relaxed">
+          {category
+            ? `Explore ${formattedCategory.toLowerCase()} insights, guides, and practical cognitive frameworks.`
+            : q
+            ? `Showing matching articles for "${q}".`
+            : "Articles, reflections, and neuroscience breakdowns designed to help you understand your mind, regulate emotions, and take intentional action."}
         </p>
       </div>
 
@@ -189,32 +221,35 @@ export default async function BlogsPage({
       {/* Categories */}
       <CategoryPills categories={categories} />
 
+      {/* Featured Story Hero Spotlight (Only on unfiltered page 1) */}
+      {spotlightBlog && <FeaturedBlogHero blog={spotlightBlog} />}
+
       {/* Blog grid */}
       {blogs.length === 0 ? (
-        <div className="mt-10 rounded-xl border border-border bg-surface-muted/50 p-6">
-          <p className="text-base opacity-80">
+        <div className="mt-10 rounded-2xl border border-border bg-surface-muted/50 p-8 text-center space-y-4">
+          <p className="text-base text-foreground/80">
             {hasFilters
               ? "No articles match your current search or category."
               : "No articles published yet."}
           </p>
           {hasFilters && (
-            <div className="mt-4">
+            <div>
               <Link
                 href="/blogs"
-                className="inline-flex items-center rounded-lg border border-border px-3 py-2 text-sm transition hover:bg-surface-muted"
+                className="btn btn-secondary px-4 py-2 text-sm shadow-xs"
               >
                 Clear filters
               </Link>
             </div>
           )}
         </div>
-      ) : (
+      ) : gridBlogs.length > 0 ? (
         <div className="grid gap-5 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {blogs.map((blog) => (
+          {gridBlogs.map((blog) => (
             <BlogCard key={blog.id} blog={blog} />
           ))}
         </div>
-      )}
+      ) : null}
 
       {/* Pagination */}
       <Pagination

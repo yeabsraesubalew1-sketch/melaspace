@@ -2,6 +2,7 @@
 
 import PageWrapper from "@/components/layout/PageWrapper";
 import { motion } from "framer-motion";
+import Link from "next/link";
 import {
   revealItem,
   revealStagger,
@@ -12,93 +13,129 @@ import {
 
 const resources = [
   {
-    title: "Clarity Compass",
+    title: "The Clarity Compass",
     description:
-      "Sort your thoughts, reduce overwhelm, and focus on what actually matters.",
+      "A step-by-step reflection deck to untangle mental noise, reduce overwhelm, and prioritize your highest-leverage next step.",
+    tag: "Reflection Deck",
   },
   {
-    title: "Daily Check-in",
+    title: "Neuroscience Habit Reset",
     description:
-      "A simple reflection to reconnect with your values and direction.",
+      "Understand dopamine loops and cognitive friction to build lasting daily habits without relying on brute willpower.",
+    tag: "Action Guide",
   },
   {
-    title: "Mood Tracker",
+    title: "Daily Mindful Check-in",
     description:
-      "Understand emotional patterns and what drives them.",
+      "A quick 5-minute morning and evening prompt system to reconnect with your emotional state and core intentions.",
+    tag: "Journal Template",
   },
   {
-    title: "Weekly Reset",
+    title: "Weekly Transition Compass",
     description:
-      "Reflect, reset, and plan your next steps with intention.",
+      "Reflect on the week gone by, recalibrate your energy, and enter the coming days with calm clarity.",
+    tag: "Planning Kit",
   },
 ];
 
 export default function ResourcesSection() {
   return (
-    <section className="py-24 bg-surface-muted/35">
+    <section className="py-24 sm:py-28 bg-surface-muted/30">
       <PageWrapper>
-        <div className="max-w-2xl">
+        <div className="max-w-4xl mx-auto space-y-12">
           
           {/* Heading */}
-          <motion.h2
-            initial="hidden"
-            whileInView="visible"
-            variants={revealItem}
-            viewport={revealViewport}
-            transition={revealTransition}
-            className="motion-surface text-3xl sm:text-4xl font-semibold tracking-tight"
-          >
-            Tools for deeper self-work
-          </motion.h2>
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6">
+            <div className="max-w-xl space-y-3">
+              <motion.span
+                initial="hidden"
+                whileInView="visible"
+                variants={revealItem}
+                viewport={revealViewport}
+                transition={revealTransition}
+                className="inline-block text-xs font-semibold uppercase tracking-wider text-primary bg-surface-muted px-3 py-1 rounded-full border border-border/70"
+              >
+                Mela Resource Hub
+              </motion.span>
+              <motion.h2
+                initial="hidden"
+                whileInView="visible"
+                variants={revealItem}
+                viewport={revealViewport}
+                transition={revealTransition}
+                className="motion-surface text-3xl sm:text-4xl font-semibold tracking-tight"
+              >
+                Tools for deeper self-reflection
+              </motion.h2>
+              <motion.p
+                initial="hidden"
+                whileInView="visible"
+                variants={revealItem}
+                viewport={revealViewport}
+                transition={{ ...revealTransition, delay: 0.04 }}
+                className="motion-surface text-base sm:text-lg text-foreground/75"
+              >
+                Curated companion decks, worksheets, and frameworks you can download and use at your own pace.
+              </motion.p>
+            </div>
 
-          {/* Subtext */}
-          <motion.p
-            initial="hidden"
-            whileInView="visible"
-            variants={revealItem}
-            viewport={revealViewport}
-            transition={{ ...revealTransition, delay: 0.04 }}
-            className="motion-surface mt-4 text-base sm:text-lg text-foreground/70"
-          >
-            Practical tools designed to help you reflect, understand, and move
-            forward at your own pace.
-          </motion.p>
-        </div>
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              variants={revealItem}
+              viewport={revealViewport}
+              transition={{ ...revealTransition, delay: 0.06 }}
+            >
+              <Link href="/resources" className="btn btn-secondary px-5 py-2.5 shadow-xs shrink-0">
+                <span>View All Resources</span>
+                <span className="ml-1.5">→</span>
+              </Link>
+            </motion.div>
+          </div>
 
-        {/* Stacked Timeline */}
-        <div className="mt-12">
+          {/* Cards Grid */}
           <motion.div
             initial="hidden"
             whileInView="visible"
             variants={revealStagger}
             viewport={revealViewport}
-            className="relative border-l border-border pl-6 sm:pl-8 space-y-5"
+            className="grid gap-5 sm:grid-cols-2"
           >
             {resources.map((item, i) => (
               <motion.div
                 key={item.title}
                 variants={revealTimelineCard}
                 transition={{ ...revealTransition, delay: i * 0.03 }}
-                className="motion-surface relative card p-5 transition duration-200 hover:-translate-y-1 hover:shadow-sm md:translate-x-0"
+                className="motion-surface rounded-2xl border border-border/80 bg-background/80 p-6 transition duration-200 hover:-translate-y-1 hover:shadow-md flex flex-col justify-between"
               >
-                <span className="absolute -left-8.5 sm:-left-10.5 top-6 h-3 w-3 rounded-full border border-border bg-background" />
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-accent bg-surface-muted px-2.5 py-0.5 rounded-full border border-border/60">
+                      {item.tag}
+                    </span>
+                    <span className="text-xs text-foreground/50">Free Download</span>
+                  </div>
 
-                <span className="absolute top-3 right-3 text-[10px] uppercase text-foreground/50">
-                  Coming Soon
-                </span>
+                  <h3 className="text-lg font-semibold text-foreground">
+                    {item.title}
+                  </h3>
 
-                <h3 className="text-lg font-semibold">{item.title}</h3>
+                  <p className="text-sm text-foreground/75 leading-relaxed">
+                    {item.description}
+                  </p>
+                </div>
 
-                <p className="mt-2 text-sm text-foreground/70 leading-relaxed">
-                  {item.description}
-                </p>
+                <div className="pt-5 border-t border-border/50 mt-4 flex items-center justify-between text-xs font-semibold text-accent">
+                  <Link href="/resources" className="hover:text-foreground transition-colors flex items-center gap-1">
+                    <span>Access in Resource Hub</span>
+                    <span>→</span>
+                  </Link>
+                </div>
               </motion.div>
             ))}
           </motion.div>
+
         </div>
-        {/* <p className="text-sm text-foreground/50 mt-6">
-          Scroll →
-        </p> */}
       </PageWrapper>
     </section>
   );
