@@ -199,7 +199,7 @@ export default async function BlogsPage({
             ? `${formattedCategory} Articles`
             : q
             ? `Search Results`
-            : "Thoughts, Neuroscience & Clarity"}
+            : "Thoughts, Neuroscience & Becoming"}
         </h1>
 
         <p className="text-base sm:text-lg text-foreground/75 leading-relaxed">
