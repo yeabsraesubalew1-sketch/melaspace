@@ -76,19 +76,42 @@ export default function Navbar() {
         )}
       >
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3.5">
-          {/* Editorial Wordmark */}
+          {/* Brand Logo: The Unfolding Sprout (Growth & Becoming) */}
           <Link
             href="/"
-            className="group flex items-baseline gap-1.5 py-1 transition-opacity hover:opacity-85"
+            className="group flex items-center gap-1.5 py-1 transition-opacity hover:opacity-85"
             onClick={() => setMobileOpen(false)}
           >
-            <span className="font-serif text-xl font-bold tracking-tight text-foreground">
-              Mela
-            </span>
-            <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-foreground/60">
-              Space
-            </span>
-            <span className="h-1.5 w-1.5 rounded-full bg-accent/80 transition-transform duration-300 group-hover:scale-125" />
+            <div className="relative flex h-8 w-8 items-center justify-center text-foreground transition-transform duration-300 group-hover:scale-105">
+              <svg viewBox="0 0 32 32" fill="none" className="h-[27px] w-[27px]" aria-hidden="true">
+                {/* Central grounded stem */}
+                <path d="M16 26V13" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+                {/* Left leaf: Self-acceptance */}
+                <path
+                  d="M16 19C11.5 19 8 15.5 8 11C12.5 11 16 14.5 16 19Z"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinejoin="round"
+                  opacity="0.5"
+                />
+                {/* Right leaf: Ascent & Becoming */}
+                <path
+                  d="M16 16C20.5 16 24 12.5 24 8C19.5 8 16 11.5 16 16Z"
+                  stroke="hsl(var(--accent))"
+                  strokeWidth="1.75"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </div>
+
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-lg font-semibold tracking-tight text-foreground">
+                Mela Space
+              </span>
+              <span className="text-[11px] font-amharic text-accent/70 font-medium select-none">
+                መላ
+              </span>
+            </div>
           </Link>
 
           {/* Desktop Nav Links */}

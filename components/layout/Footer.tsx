@@ -10,14 +10,34 @@ export default function Footer() {
           
           {/* Brand */}
           <div className="space-y-4 md:col-span-1">
-            <Link href="/" className="group inline-flex items-baseline gap-1.5 transition-opacity hover:opacity-85">
-              <span className="font-serif text-lg font-bold tracking-tight text-foreground">
-                Mela
-              </span>
-              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-foreground/60">
-                Space
-              </span>
-              <span className="h-1.5 w-1.5 rounded-full bg-accent/80 transition-transform duration-300 group-hover:scale-125" />
+            <Link href="/" className="group inline-flex items-center gap-1.5 transition-opacity hover:opacity-85">
+              <div className="relative flex h-7 w-7 items-center justify-center text-foreground transition-transform duration-300 group-hover:scale-105">
+                <svg viewBox="0 0 32 32" fill="none" className="h-[23px] w-[23px]" aria-hidden="true">
+                  <path d="M16 26V13" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+                  <path
+                    d="M16 19C11.5 19 8 15.5 8 11C12.5 11 16 14.5 16 19Z"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinejoin="round"
+                    opacity="0.5"
+                  />
+                  <path
+                    d="M16 16C20.5 16 24 12.5 24 8C19.5 8 16 11.5 16 16Z"
+                    stroke="hsl(var(--accent))"
+                    strokeWidth="1.75"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </div>
+
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-base font-semibold tracking-tight text-foreground">
+                  Mela Space
+                </span>
+                <span className="text-[10px] font-amharic text-accent/70 font-medium select-none">
+                  መላ
+                </span>
+              </div>
             </Link>
 
             <p className="text-sm text-foreground/75 leading-relaxed">
