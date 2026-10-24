@@ -10,6 +10,7 @@ import { Blog } from "@/models/Blog";
 import { warmFileVaultConnection } from "@/lib/filevault";
 import { absoluteUrl, seoConfig, breadcrumbSchema } from "@/lib/seo";
 import { Types } from "mongoose";
+import { marked } from "marked";
 
 export const dynamic = "force-dynamic";
 
@@ -117,6 +118,7 @@ export default async function SingleResourcePage({ params }: Props) {
   const files = resource.files || [];
   const isBundle = files.length > 1;
   const totalSizeBytes = files.reduce((acc, f) => acc + (f.sizeBytes || 0), 0);
+  const descriptionHtml = resource.description ? await marked.parse(resource.description) : "";
 
   const breadcrumbJsonLd = breadcrumbSchema([
     { name: "Home", path: "/" },
@@ -237,14 +239,17 @@ export default async function SingleResourcePage({ params }: Props) {
             )}
 
             {/* Full Description & Instructions */}
-            <div className="space-y-4">
-              <h2 className="text-xl font-bold text-foreground">
-                About this Resource
-              </h2>
-              <div className="prose prose-neutral dark:prose-invert max-w-none text-foreground/80 leading-relaxed text-sm sm:text-base whitespace-pre-line">
-                {resource.description}
+            {descriptionHtml && (
+              <div className="space-y-4">
+                <h2 className="text-xl font-bold text-foreground">
+                  About this Resource
+                </h2>
+                <div
+                  className="prose prose-neutral dark:prose-invert max-w-none text-foreground/85 leading-relaxed text-sm sm:text-base prose-headings:text-foreground prose-headings:font-bold prose-h3:text-lg sm:prose-h3:text-xl prose-h3:mt-6 prose-h3:mb-3 prose-p:my-3 prose-p:leading-relaxed prose-strong:text-foreground prose-strong:font-semibold prose-ul:my-4 prose-ul:list-disc prose-ul:pl-5 prose-li:my-1.5 prose-hr:my-6 prose-hr:border-border/60"
+                  dangerouslySetInnerHTML={{ __html: descriptionHtml }}
+                />
               </div>
-            </div>
+            )}
 
             {/* Tags */}
             {resource.tags && resource.tags.length > 0 && (
