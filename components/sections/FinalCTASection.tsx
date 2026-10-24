@@ -11,17 +11,11 @@ export default function FinalCTASection() {
       <PageWrapper>
         <div className="relative mx-auto max-w-4xl overflow-hidden rounded-3xl border border-border/80 bg-gradient-to-br from-surface via-surface-muted/50 to-surface p-10 sm:p-16 text-center shadow-xs">
           
-          {/* Subtle concentric rings decorative watermark in background */}
+          {/* Soft ambient glow */}
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute -right-16 -top-16 opacity-[0.06] text-foreground select-none"
-          >
-            <svg viewBox="0 0 100 100" fill="none" className="h-72 w-72">
-              <circle cx="50" cy="50" r="45" stroke="currentColor" strokeWidth="2" />
-              <circle cx="50" cy="50" r="30" stroke="currentColor" strokeWidth="2" />
-              <circle cx="50" cy="50" r="15" stroke="currentColor" strokeWidth="2" />
-            </svg>
-          </div>
+            className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-accent/10 blur-3xl select-none"
+          />
 
           <div className="relative z-10 max-w-2xl mx-auto space-y-6">
             <motion.span

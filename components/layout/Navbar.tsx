@@ -76,22 +76,19 @@ export default function Navbar() {
         )}
       >
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3.5">
-          {/* Logo with Brand Clarity Mark */}
+          {/* Editorial Wordmark */}
           <Link
             href="/"
-            className="group flex items-center gap-2.5 transition"
+            className="group flex items-baseline gap-1.5 py-1 transition-opacity hover:opacity-85"
             onClick={() => setMobileOpen(false)}
           >
-            <div className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-xs transition group-hover:scale-105">
-              <svg viewBox="0 0 64 64" fill="none" className="h-5 w-5" aria-hidden="true">
-                <circle cx="32" cy="32" r="19" stroke="#c9976b" strokeWidth="3" opacity="0.5" />
-                <circle cx="32" cy="32" r="11" stroke="#f5e6d3" strokeWidth="3.5" />
-                <circle cx="32" cy="32" r="4" fill="#f5e6d3" />
-              </svg>
-            </div>
-            <span className="text-lg font-semibold tracking-tight text-foreground transition group-hover:opacity-85">
-              Mela Space
+            <span className="font-serif text-xl font-bold tracking-tight text-foreground">
+              Mela
             </span>
+            <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-foreground/60">
+              Space
+            </span>
+            <span className="h-1.5 w-1.5 rounded-full bg-accent/80 transition-transform duration-300 group-hover:scale-125" />
           </Link>
 
           {/* Desktop Nav Links */}

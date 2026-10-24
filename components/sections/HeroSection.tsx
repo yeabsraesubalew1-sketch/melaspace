@@ -84,15 +84,16 @@ export default function HeroSection() {
               </div>
 
               <svg
-                viewBox="0 0 88 88"
-                className="h-16 w-16 shrink-0 text-foreground/25"
+                viewBox="0 0 48 48"
+                className="h-11 w-11 shrink-0 text-accent/50"
                 fill="none"
                 aria-hidden="true"
               >
-                <circle cx="44" cy="44" r="33" stroke="currentColor" strokeWidth="1.5" opacity="0.35" />
-                <circle cx="44" cy="44" r="18" stroke="currentColor" strokeWidth="1.5" opacity="0.8" />
-                <path d="M25 49c5-9 12-13 19-13s14 4 19 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                <path d="M44 16v10M72 44H62M44 72V62M16 44h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.6" />
+                <circle cx="24" cy="24" r="20" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 3" />
+                <path d="M24 10v28M10 24h28" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" opacity="0.4" />
+                <polygon points="24,15 26.5,24 24,33 21.5,24" fill="currentColor" opacity="0.6" />
+                <polygon points="15,24 24,26.5 33,24 24,21.5" fill="currentColor" opacity="0.6" />
+                <circle cx="24" cy="24" r="2" fill="hsl(var(--background))" />
               </svg>
             </div>
 

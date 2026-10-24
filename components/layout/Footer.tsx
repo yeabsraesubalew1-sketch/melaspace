@@ -10,17 +10,14 @@ export default function Footer() {
           
           {/* Brand */}
           <div className="space-y-4 md:col-span-1">
-            <Link href="/" className="inline-flex items-center gap-2.5 group">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-xs transition group-hover:scale-105">
-                <svg viewBox="0 0 64 64" fill="none" className="h-4 w-4" aria-hidden="true">
-                  <circle cx="32" cy="32" r="19" stroke="#c9976b" strokeWidth="3" opacity="0.5" />
-                  <circle cx="32" cy="32" r="11" stroke="#f5e6d3" strokeWidth="3.5" />
-                  <circle cx="32" cy="32" r="4" fill="#f5e6d3" />
-                </svg>
-              </div>
-              <span className="text-base font-semibold tracking-tight text-foreground">
-                Mela Space
+            <Link href="/" className="group inline-flex items-baseline gap-1.5 transition-opacity hover:opacity-85">
+              <span className="font-serif text-lg font-bold tracking-tight text-foreground">
+                Mela
               </span>
+              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-foreground/60">
+                Space
+              </span>
+              <span className="h-1.5 w-1.5 rounded-full bg-accent/80 transition-transform duration-300 group-hover:scale-125" />
             </Link>
 
             <p className="text-sm text-foreground/75 leading-relaxed">
