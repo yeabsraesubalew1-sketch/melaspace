@@ -72,7 +72,7 @@ export default function HeroSection() {
             variants={revealCard}
             viewport={revealViewport}
             transition={{ ...revealTransition, delay: 0.06 }}
-            className="motion-surface card overflow-hidden p-6 sm:p-7 lg:-translate-y-4 xl:-translate-y-6"
+            className="motion-surface card overflow-hidden p-6 sm:p-7 lg:-mt-4 xl:-mt-6"
           >
             <div className="flex items-start justify-between gap-5">
               <div>

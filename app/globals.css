@@ -339,10 +339,8 @@ a.resource-mention::before {
 
 @layer utilities {
   .motion-surface {
-    will-change: transform, opacity;
-    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
-    contain: paint;
   }
 
   .no-scrollbar {
