@@ -14,24 +14,28 @@ import {
 const resources = [
   {
     title: "The Clarity Compass",
+    slug: "the-clarity-compass",
     description:
       "A step-by-step reflection deck to untangle mental noise, reduce overwhelm, and prioritize your highest-leverage next step.",
     tag: "Reflection Deck",
   },
   {
     title: "Neuroscience Habit Reset",
+    slug: "neuroscience-habit-reset",
     description:
       "Understand dopamine loops and cognitive friction to build lasting daily habits without relying on brute willpower.",
     tag: "Action Guide",
   },
   {
     title: "Daily Mindful Check-in",
+    slug: "daily-mindful-check-in",
     description:
       "A quick 5-minute morning and evening prompt system to reconnect with your emotional state and core intentions.",
     tag: "Journal Template",
   },
   {
     title: "Weekly Transition Compass",
+    slug: "weekly-transition-compass",
     description:
       "Reflect on the week gone by, recalibrate your energy, and enter the coming days with calm clarity.",
     tag: "Planning Kit",
@@ -126,8 +130,8 @@ export default function ResourcesSection() {
                 </div>
 
                 <div className="pt-5 border-t border-border/50 mt-4 flex items-center justify-between text-xs font-semibold text-accent">
-                  <Link href="/resources" className="hover:text-foreground transition-colors flex items-center gap-1">
-                    <span>Access in Resource Hub</span>
+                  <Link href={`/resources/${item.slug}`} className="hover:text-foreground transition-colors flex items-center gap-1">
+                    <span>Get Guide & Download</span>
                     <span>→</span>
                   </Link>
                 </div>
