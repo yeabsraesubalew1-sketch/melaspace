@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import ResourceCard from "./ResourceCard";
 import type { ResourceItem } from "@/types/api";
 
@@ -8,14 +8,21 @@ const FORMAT_FILTERS = [
   { id: "all", label: "All Formats" },
   { id: "pdf", label: "PDF Documents" },
   { id: "bundle", label: "Multi-File Decks" },
-  { id: "archive", label: "Archives (ZIP)" },
+  { id: "doc", label: "Word Documents" },
   { id: "spreadsheet", label: "Spreadsheets" },
+  { id: "archive", label: "Archives (ZIP)" },
 ];
 
-export default function ResourcesCatalog({ initialResources }: { initialResources: ResourceItem[] }) {
+interface ResourcesCatalogProps {
+  initialResources: ResourceItem[];
+  initialCategory?: string;
+}
+
+export default function ResourcesCatalog({
+  initialResources,
+  initialCategory = "all",
+}: ResourcesCatalogProps) {
   const [query, setQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
-  const [selectedFormat, setSelectedFormat] = useState("all");
 
   // Dynamically extract unique categories from resources
   const categories = useMemo(() => {
@@ -25,6 +32,70 @@ export default function ResourcesCatalog({ initialResources }: { initialResource
     });
     return ["all", ...Array.from(set)];
   }, [initialResources]);
+
+  // Normalize initial category match from searchParams
+  const matchedInitialCategory = useMemo(() => {
+    if (!initialCategory || initialCategory === "all") return "all";
+    const clean = initialCategory.toLowerCase().trim();
+    const found = categories.find((c) => {
+      const lower = c.toLowerCase();
+      return (
+        lower === clean ||
+        lower.replace(/\s+/g, "-") === clean ||
+        lower.replace(/s$/, "") === clean.replace(/s$/, "")
+      );
+    });
+    return found || "all";
+  }, [categories, initialCategory]);
+
+  const [selectedCategory, setSelectedCategory] = useState(matchedInitialCategory);
+  const [selectedFormat, setSelectedFormat] = useState("all");
+
+  // Keep state in sync if initialCategory prop changes
+  useEffect(() => {
+    if (matchedInitialCategory && matchedInitialCategory !== "all") {
+      setSelectedCategory(matchedInitialCategory);
+    }
+  }, [matchedInitialCategory]);
+
+  const handleSelectCategory = (cat: string) => {
+    setSelectedCategory(cat);
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      if (cat === "all") {
+        url.searchParams.delete("category");
+      } else {
+        url.searchParams.set("category", cat);
+      }
+      window.history.replaceState({}, "", url.toString());
+    }
+  };
+
+  const handleSelectFormat = (fmt: string) => {
+    setSelectedFormat(fmt);
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      if (fmt === "all") {
+        url.searchParams.delete("format");
+      } else {
+        url.searchParams.set("format", fmt);
+      }
+      window.history.replaceState({}, "", url.toString());
+    }
+  };
+
+  const handleResetFilters = () => {
+    setQuery("");
+    setSelectedCategory("all");
+    setSelectedFormat("all");
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("category");
+      url.searchParams.delete("format");
+      url.searchParams.delete("q");
+      window.history.replaceState({}, "", url.pathname);
+    }
+  };
 
   // Filter logic
   const filtered = useMemo(() => {
@@ -40,6 +111,8 @@ export default function ResourcesCatalog({ initialResources }: { initialResource
           if (!item.files || item.files.length <= 1) return false;
         } else if (selectedFormat === "pdf") {
           if (!item.files.some((f) => f.extension === "pdf")) return false;
+        } else if (selectedFormat === "doc") {
+          if (!item.files.some((f) => ["doc", "docx", "rtf", "odt"].includes(f.extension))) return false;
         } else if (selectedFormat === "archive") {
           if (!item.files.some((f) => ["zip", "rar", "7z", "tar", "gz"].includes(f.extension))) return false;
         } else if (selectedFormat === "spreadsheet") {
@@ -112,9 +185,9 @@ export default function ResourcesCatalog({ initialResources }: { initialResource
               <button
                 key={cat}
                 type="button"
-                onClick={() => setSelectedCategory(cat)}
+                onClick={() => handleSelectCategory(cat)}
                 className={`px-3 py-1 rounded-full text-xs font-medium transition-all cursor-pointer ${
-                  selectedCategory === cat
+                  selectedCategory.toLowerCase() === cat.toLowerCase()
                     ? "bg-primary text-primary-foreground shadow-2xs font-semibold"
                     : "bg-surface border border-border/70 text-foreground/70 hover:bg-surface-muted hover:text-foreground"
                 }`}
@@ -133,7 +206,7 @@ export default function ResourcesCatalog({ initialResources }: { initialResource
               <button
                 key={fmt.id}
                 type="button"
-                onClick={() => setSelectedFormat(fmt.id)}
+                onClick={() => handleSelectFormat(fmt.id)}
                 className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
                   selectedFormat === fmt.id
                     ? "bg-foreground text-background font-semibold"
@@ -148,20 +221,46 @@ export default function ResourcesCatalog({ initialResources }: { initialResource
       </div>
 
       {/* Results Count & Active Filters Indicator */}
-      <div className="flex items-center justify-between text-xs text-foreground/50 px-1">
-        <span>
-          Showing <strong className="text-foreground">{filtered.length}</strong> {filtered.length === 1 ? "resource" : "resources"}
-        </span>
+      <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-foreground/50 px-1">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span>
+            Showing <strong className="text-foreground">{filtered.length}</strong> {filtered.length === 1 ? "resource" : "resources"}
+          </span>
+          {selectedCategory !== "all" && (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 text-[11px] font-medium">
+              <span>Category: <strong>{selectedCategory}</strong></span>
+              <button
+                type="button"
+                onClick={() => handleSelectCategory("all")}
+                className="hover:text-foreground cursor-pointer"
+                title="Remove category filter"
+              >
+                ✕
+              </button>
+            </span>
+          )}
+          {selectedFormat !== "all" && (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-foreground/10 text-foreground border border-foreground/20 text-[11px] font-medium">
+              <span>Format: <strong>{FORMAT_FILTERS.find((f) => f.id === selectedFormat)?.label || selectedFormat}</strong></span>
+              <button
+                type="button"
+                onClick={() => handleSelectFormat("all")}
+                className="hover:text-foreground cursor-pointer"
+                title="Remove format filter"
+              >
+                ✕
+              </button>
+            </span>
+          )}
+        </div>
+
         {(query || selectedCategory !== "all" || selectedFormat !== "all") && (
           <button
-            onClick={() => {
-              setQuery("");
-              setSelectedCategory("all");
-              setSelectedFormat("all");
-            }}
+            type="button"
+            onClick={handleResetFilters}
             className="text-primary hover:underline font-medium cursor-pointer"
           >
-            Reset Filters
+            Reset All Filters
           </button>
         )}
       </div>
@@ -187,11 +286,8 @@ export default function ResourcesCatalog({ initialResources }: { initialResource
               : "No resources published in this category yet. Check back soon!"}
           </p>
           <button
-            onClick={() => {
-              setQuery("");
-              setSelectedCategory("all");
-              setSelectedFormat("all");
-            }}
+            type="button"
+            onClick={handleResetFilters}
             className="btn btn-secondary text-xs px-4 py-2 mt-2"
           >
             Reset Filters

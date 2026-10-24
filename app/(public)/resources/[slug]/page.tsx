@@ -131,8 +131,8 @@ export default async function SingleResourcePage({ params }: Props) {
     description: resource.excerpt,
     url: absoluteUrl(`/resources/${resource.slug}`),
     image: resource.coverImage?.url ? [resource.coverImage.url] : undefined,
-    datePublished: resource.createdAt.toISOString(),
-    dateModified: resource.updatedAt.toISOString(),
+    datePublished: resource.createdAt ? new Date(resource.createdAt).toISOString() : new Date().toISOString(),
+    dateModified: resource.updatedAt ? new Date(resource.updatedAt).toISOString() : new Date().toISOString(),
     isAccessibleForFree: true,
     fileFormat: files[0]?.mimeType || "application/pdf",
     author: {
@@ -203,7 +203,7 @@ export default async function SingleResourcePage({ params }: Props) {
             <span>•</span>
             <span>Total size: {formatBytes(totalSizeBytes)}</span>
             <span>•</span>
-            <span>Published {new Date(resource.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
+            <span>Published {resource.createdAt ? new Date(resource.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Recently"}</span>
           </div>
         </div>
 

@@ -66,6 +66,12 @@ export default function RootLayout({
 			<head>
 				<link rel="preconnect" href="https://website-973c67d0.zvl.obd.mybluehost.me" crossOrigin="anonymous" />
 				<link rel="dns-prefetch" href="https://website-973c67d0.zvl.obd.mybluehost.me" />
+				{/* Safeguard against upstream Next.js / Turbopack dev performance.measure bug during RSC notFound/redirect/errors */}
+				<script
+					dangerouslySetInnerHTML={{
+						__html: `(function(){if(typeof window!=='undefined'&&window.performance&&typeof window.performance.measure==='function'){var m=window.performance.measure.bind(window.performance);window.performance.measure=function(n,s,e){try{if(s&&typeof s==='object'){var o=Object.assign({},s);if(typeof o.end==='number'&&(!isFinite(o.end)||o.end<0)){o.end=Math.max(0,typeof o.start==='number'&&isFinite(o.start)?o.start:0);}if(typeof o.start==='number'&&(!isFinite(o.start)||o.start<0)){o.start=0;}return m(n,o);}return m(n,s,e);}catch(x){if(x instanceof TypeError&&(x.message.indexOf('negative')!==-1||x.message.indexOf('time stamp')!==-1)){return;}throw x;};};}})();`,
+					}}
+				/>
 				<script
 					type="application/ld+json"
 					dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema()) }}

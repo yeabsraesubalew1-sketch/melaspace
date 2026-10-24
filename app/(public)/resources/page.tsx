@@ -21,7 +21,14 @@ const breadcrumbJsonLd = breadcrumbSchema([
   { name: "Resources", path: "/resources" },
 ]);
 
-export default async function ResourcesPage() {
+interface Props {
+  searchParams?: Promise<{ category?: string; format?: string; q?: string }>;
+}
+
+export default async function ResourcesPage({ searchParams }: Props) {
+  const resolvedParams = searchParams ? await searchParams : {};
+  const initialCategory = resolvedParams?.category || "all";
+
   // Keep FileVault SSL keep-alive warm in background for instant file downloads
   warmFileVaultConnection();
 
@@ -79,7 +86,7 @@ export default async function ResourcesPage() {
         </section>
 
         {/* Catalog & Filter Grid */}
-        <ResourcesCatalog initialResources={resources} />
+        <ResourcesCatalog initialResources={resources} initialCategory={initialCategory} />
 
         {/* Bottom Call to Action */}
         <section className="text-center space-y-4 rounded-3xl border border-border/80 bg-surface/50 p-8 sm:p-12 backdrop-blur-xs shadow-xs">

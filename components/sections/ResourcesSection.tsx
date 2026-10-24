@@ -14,31 +14,31 @@ import {
 const resources = [
   {
     title: "The Clarity Compass",
-    slug: "the-clarity-compass",
+    category: "Reflection Decks",
+    tag: "Reflection Deck",
     description:
       "A step-by-step reflection deck to untangle mental noise, reduce overwhelm, and prioritize your highest-leverage next step.",
-    tag: "Reflection Deck",
   },
   {
     title: "Neuroscience Habit Reset",
-    slug: "neuroscience-habit-reset",
+    category: "Action Guides",
+    tag: "Action Guide",
     description:
       "Understand dopamine loops and cognitive friction to build lasting daily habits without relying on brute willpower.",
-    tag: "Action Guide",
   },
   {
     title: "Daily Mindful Check-in",
-    slug: "daily-mindful-check-in",
+    category: "Journal Templates",
+    tag: "Journal Template",
     description:
       "A quick 5-minute morning and evening prompt system to reconnect with your emotional state and core intentions.",
-    tag: "Journal Template",
   },
   {
     title: "Weekly Transition Compass",
-    slug: "weekly-transition-compass",
+    category: "Planning Kits",
+    tag: "Planning Kit",
     description:
       "Reflect on the week gone by, recalibrate your energy, and enter the coming days with calm clarity.",
-    tag: "Planning Kit",
   },
 ];
 
@@ -105,38 +105,49 @@ export default function ResourcesSection() {
             viewport={revealViewport}
             className="grid gap-5 sm:grid-cols-2"
           >
-            {resources.map((item, i) => (
-              <motion.div
-                key={item.title}
-                variants={revealTimelineCard}
-                transition={{ ...revealTransition, delay: i * 0.03 }}
-                className="motion-surface rounded-2xl border border-border/80 bg-background/80 p-6 transition duration-200 hover:-translate-y-1 hover:shadow-md flex flex-col justify-between"
-              >
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-semibold uppercase tracking-wider text-accent bg-surface-muted px-2.5 py-0.5 rounded-full border border-border/60">
-                      {item.tag}
-                    </span>
-                    <span className="text-xs text-foreground/50">Free Download</span>
+            {resources.map((item, i) => {
+              const filterHref = `/resources?category=${encodeURIComponent(item.category)}`;
+              return (
+                <motion.div
+                  key={item.title}
+                  variants={revealTimelineCard}
+                  transition={{ ...revealTransition, delay: i * 0.03 }}
+                  className="motion-surface rounded-2xl border border-border/80 bg-background/80 p-6 transition duration-200 hover:-translate-y-1 hover:shadow-md flex flex-col justify-between"
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <Link
+                        href={filterHref}
+                        className="text-[11px] font-semibold uppercase tracking-wider text-accent bg-surface-muted px-2.5 py-0.5 rounded-full border border-border/60 hover:bg-surface transition-colors"
+                      >
+                        {item.tag}
+                      </Link>
+                      <span className="text-xs text-foreground/50">Free Download</span>
+                    </div>
+
+                    <Link href={filterHref} className="block group">
+                      <h3 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
+                        {item.title}
+                      </h3>
+                    </Link>
+
+                    <p className="text-sm text-foreground/75 leading-relaxed">
+                      {item.description}
+                    </p>
                   </div>
 
-                  <h3 className="text-lg font-semibold text-foreground">
-                    {item.title}
-                  </h3>
-
-                  <p className="text-sm text-foreground/75 leading-relaxed">
-                    {item.description}
-                  </p>
-                </div>
-
-                <div className="pt-5 border-t border-border/50 mt-4 flex items-center justify-between text-xs font-semibold text-accent">
-                  <Link href={`/resources/${item.slug}`} className="hover:text-foreground transition-colors flex items-center gap-1">
-                    <span>Get Guide & Download</span>
-                    <span>→</span>
-                  </Link>
-                </div>
-              </motion.div>
-            ))}
+                  <div className="pt-5 border-t border-border/50 mt-4 flex items-center justify-between text-xs font-semibold text-accent">
+                    <Link
+                      href={filterHref}
+                      className="hover:text-foreground transition-colors flex items-center gap-1.5"
+                    >
+                      <span>Browse {item.category}</span>
+                      <span>→</span>
+                    </Link>
+                  </div>
+                </motion.div>
+              );
+            })}
           </motion.div>
 
         </div>
