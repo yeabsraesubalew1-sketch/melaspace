@@ -1,6 +1,6 @@
 export default function BlogDetailLoading() {
   return (
-    <main className="px-4 sm:px-6 py-16 sm:py-20 animate-pulse">
+    <main className="px-4 sm:px-6 pt-24 sm:pt-32 pb-20 animate-pulse">
       <div className="mx-auto max-w-6xl">
         <div className="flex flex-col gap-10 lg:flex-row lg:items-start">
           <aside className="order-2 w-full lg:order-1 lg:w-72">
