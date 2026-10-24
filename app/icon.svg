@@ -4,18 +4,34 @@
       <stop offset="0%" stop-color="#3b291f" />
       <stop offset="100%" stop-color="#221610" />
     </linearGradient>
-    <linearGradient id="mela-gold" x1="16" y1="16" x2="48" y2="48" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#f5e6d3" />
-      <stop offset="100%" stop-color="#c9976b" />
-    </linearGradient>
   </defs>
 
   <!-- Background rounded squircle with subtle highlight border -->
   <rect x="3" y="3" width="58" height="58" rx="16" fill="url(#mela-bg)" />
   <rect x="3" y="3" width="58" height="58" rx="16" stroke="#5a3f30" stroke-width="1.5" />
 
-  <!-- Signature Mela Clarity Rings: concentric circles symbolizing focus, reflection, and inner calm -->
-  <circle cx="32" cy="32" r="19" stroke="#967054" stroke-width="2.5" opacity="0.45" />
-  <circle cx="32" cy="32" r="12" stroke="url(#mela-gold)" stroke-width="3" />
-  <circle cx="32" cy="32" r="4.5" fill="#f5e6d3" />
+  <!-- The Unfolding Sprout (Growth & Becoming) -->
+  <!-- Central grounded stem -->
+  <path d="M32 50V25" stroke="#f5e6d3" stroke-width="3.5" stroke-linecap="round" />
+
+  <!-- Left leaf: Self-acceptance -->
+  <path
+    d="M32 37C23 37 16 30 16 21C25 21 32 28 32 37Z"
+    stroke="#f5e6d3"
+    stroke-width="3"
+    stroke-linejoin="round"
+    fill="#f5e6d3"
+    fill-opacity="0.2"
+    opacity="0.85"
+  />
+
+  <!-- Right leaf: Ascent & Becoming -->
+  <path
+    d="M32 31C41 31 48 24 48 15C39 15 32 22 32 31Z"
+    stroke="#c9976b"
+    stroke-width="3.5"
+    stroke-linejoin="round"
+    fill="#c9976b"
+    fill-opacity="0.35"
+  />
 </svg>
