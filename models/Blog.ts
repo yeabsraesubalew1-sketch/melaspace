@@ -20,6 +20,7 @@ export interface BlogDocument extends mongoose.Document {
   lastEditedBy?: mongoose.Types.ObjectId;
   isPinned?: boolean;
   views?: number;
+  commentsCount?: number;
   aiSummary?: EditorContent;
   createdAt: Date;
   updatedAt: Date;
@@ -91,6 +92,12 @@ const BlogSchema = new Schema<BlogDocument>(
     },
 
     views: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    commentsCount: {
       type: Number,
       default: 0,
       min: 0,

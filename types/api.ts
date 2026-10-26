@@ -47,6 +47,7 @@ export interface BlogPreview {
   status?: "draft" | "published";
   isPinned?: boolean;
   views?: number;
+  commentsCount?: number;
   author?: BlogAuthorPreview;
   authorId?: string;
   authorName?: string;

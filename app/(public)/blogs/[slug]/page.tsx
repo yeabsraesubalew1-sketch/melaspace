@@ -4,6 +4,7 @@ import TableOfContents from "@/components/blog/TableOfContents";
 import BookmarkButton from "@/components/blog/BookmarkButton";
 import ViewTracker from "@/components/blog/ViewTracker";
 import LinkedResourcesModule from "@/components/blog/LinkedResourcesModule";
+import CommentSection from "@/components/blog/comments/CommentSection";
 import BlogReadingView from "@/components/blog/BlogReadingView";
 import DefaultAvatar from "@/components/ui/DefaultAvatar";
 import type { EditorContent } from "@/types/editor";
@@ -53,6 +54,7 @@ interface Blog {
     avatar?: string;
   };
   views?: number;
+  commentsCount?: number;
   isPinned?: boolean;
   isBookmarked?: boolean;
   featuredImage?: {
@@ -503,6 +505,12 @@ export default async function BlogPage({ params }: Props) {
 
             {/* Linked Downloadable Resources & Decks */}
             <LinkedResourcesModule resources={blog.linkedResources} />
+
+            {/* Community Comments & Discussion */}
+            <CommentSection
+              blogSlug={blog.slug}
+              initialCommentsCount={blog.commentsCount || 0}
+            />
 
             {/* Related Articles Module */}
             {relatedBlogs.length > 0 && (

@@ -149,6 +149,7 @@ export async function GET(
       updatedAt: blog.updatedAt.toISOString(),
       isPinned: Boolean(blog.isPinned),
       views: blog.views ?? 0,
+      commentsCount: blog.commentsCount ?? 0,
       authorName,
       author: isAnonymous || !populatedAuthor
         ? {
