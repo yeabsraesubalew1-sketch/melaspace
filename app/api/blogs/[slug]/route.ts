@@ -23,6 +23,9 @@ interface PopulatedAuthorDoc {
   _id: { toString(): string };
   name: string;
   avatar?: string;
+  role?: string;
+  bio?: string;
+  createdAt?: Date | string;
 }
 
 export async function GET(
@@ -40,7 +43,7 @@ export async function GET(
       status: "published",
     })
       .populate("categories", "_id name slug")
-      .populate("author", "_id name avatar role")
+      .populate("author", "_id name avatar role bio createdAt")
       .lean();
 
     if (!blog) {
@@ -154,11 +157,16 @@ export async function GET(
       author: isAnonymous || !populatedAuthor
         ? {
             name: authorName,
+            isMelaTeam: authorName === "Mela Team",
           }
         : {
             id: populatedAuthor._id.toString(),
             name: populatedAuthor.name,
             avatar: populatedAuthor.avatar,
+            bio: populatedAuthor.bio,
+            role: populatedAuthor.role,
+            joinedAt: populatedAuthor.createdAt ? new Date(populatedAuthor.createdAt).toISOString() : undefined,
+            isMelaTeam: authorName === "Mela Team",
           },
       isAnonymous,
       isBookmarked,

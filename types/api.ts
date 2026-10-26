@@ -22,8 +22,12 @@ export interface BlogCategoryPreview {
 
 export interface BlogAuthorPreview {
   id?: string;
-  name: string;
+  name?: string;
   avatar?: string;
+  bio?: string;
+  role?: string;
+  joinedAt?: string;
+  isMelaTeam?: boolean;
 }
 
 export interface FeaturedImage {

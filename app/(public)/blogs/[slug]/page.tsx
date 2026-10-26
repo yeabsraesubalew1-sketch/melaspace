@@ -6,6 +6,7 @@ import ViewTracker from "@/components/blog/ViewTracker";
 import LinkedResourcesModule from "@/components/blog/LinkedResourcesModule";
 import CommentSection from "@/components/blog/comments/CommentSection";
 import BlogReadingView from "@/components/blog/BlogReadingView";
+import AuthorHoverCard from "@/components/blog/AuthorHoverCard";
 import DefaultAvatar from "@/components/ui/DefaultAvatar";
 import type { EditorContent } from "@/types/editor";
 import type { ResourceItem } from "@/types/api";
@@ -48,10 +49,15 @@ interface Blog {
   content: EditorContent;
   aiSummary?: EditorContent;
   authorName?: string;
+  isAnonymous?: boolean;
   author?: {
     id?: string;
     name?: string;
     avatar?: string;
+    bio?: string;
+    role?: string;
+    joinedAt?: string;
+    isMelaTeam?: boolean;
   };
   views?: number;
   commentsCount?: number;
@@ -350,13 +356,12 @@ export default async function BlogPage({ params }: Props) {
 
                   {/* Author & Publication Details Row */}
                   <div className="flex flex-wrap items-center gap-4 py-2 border-y border-white/20 text-xs sm:text-sm text-white/80">
-                    <div className="flex items-center gap-2.5">
-                      <DefaultAvatar name={authorName} size="md" />
-                      <div>
-                        <span className="font-semibold text-white">{authorName}</span>
-                        <span className="block text-[11px] text-white/60">Author</span>
-                      </div>
-                    </div>
+                    <AuthorHoverCard
+                      author={blog.author}
+                      authorName={authorName}
+                      isAnonymous={Boolean(blog.isAnonymous)}
+                      variant="dark"
+                    />
 
                     <div className="flex flex-wrap items-center gap-3 text-white/70 ml-auto">
                       {formattedDate && <span>{formattedDate}</span>}
@@ -444,13 +449,12 @@ export default async function BlogPage({ params }: Props) {
 
                 {/* Author & Publication Details Row */}
                 <div className="flex flex-wrap items-center gap-4 py-2 border-y border-border/60 text-xs sm:text-sm text-foreground/75">
-                  <div className="flex items-center gap-2.5">
-                    <DefaultAvatar name={authorName} size="md" />
-                    <div>
-                      <span className="font-semibold text-foreground">{authorName}</span>
-                      <span className="block text-[11px] text-foreground/50">Author</span>
-                    </div>
-                  </div>
+                  <AuthorHoverCard
+                    author={blog.author}
+                    authorName={authorName}
+                    isAnonymous={Boolean(blog.isAnonymous)}
+                    variant="light"
+                  />
 
                   <div className="flex flex-wrap items-center gap-3 text-foreground/60 ml-auto">
                     {formattedDate && <span>{formattedDate}</span>}
