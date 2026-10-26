@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useSession } from "next-auth/react";
 import toast from "react-hot-toast";
 import dynamic from "next/dynamic";
 import Link from "next/link";
@@ -61,6 +62,8 @@ export default function ProposePostModal({
   isOpen,
   onClose,
 }: ProposePostModalProps) {
+  const { data: session } = useSession();
+  const isAdmin = ["root_admin", "super_admin", "manager"].includes(session?.user?.role || "");
   const [activeTab, setActiveTab] = useState<"new" | "list">("new");
   const [title, setTitle] = useState("");
   const [excerpt, setExcerpt] = useState("");
@@ -128,6 +131,8 @@ export default function ProposePostModal({
   const pendingCount = proposals.filter((p) => p.status === "pending").length;
   const approvedCount = proposals.filter((p) => p.status === "approved").length;
   const rejectedCount = proposals.filter((p) => p.status === "rejected").length;
+
+  const isQuotaExceeded = !isAdmin && !editingProposalId && pendingCount >= 3;
 
   const filteredProposals = proposals.filter((p) => {
     if (filterStatus === "all") return true;
@@ -222,6 +227,26 @@ export default function ProposePostModal({
 
     if (!targetId) {
       toast.error("Cannot find the target article to propose changes for.");
+      return;
+    }
+
+    // Check if the user already has a pending revision for this blog
+    const existingPendingRevision = proposals.find(
+      (p) =>
+        p.status === "pending" &&
+        p.type === "revision" &&
+        ((p.targetBlogId &&
+          (typeof p.targetBlogId === "object"
+            ? p.targetBlogId._id === targetId
+            : p.targetBlogId === targetId)) ||
+          p.blogId === targetId)
+    );
+
+    if (existingPendingRevision) {
+      handleEditClick(existingPendingRevision);
+      toast("Opened your existing pending revision for this article so you can update it.", {
+        icon: "✏️",
+      });
       return;
     }
 
@@ -537,6 +562,28 @@ export default function ProposePostModal({
                 </div>
               )}
 
+              {/* Quota Limit Warning Banner */}
+              {isQuotaExceeded && (
+                <div className="flex items-start gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3.5 text-xs text-amber-800 dark:text-amber-300">
+                  <svg className="h-4 w-4 shrink-0 text-amber-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  <div className="space-y-1">
+                    <span className="font-semibold block">Pending proposal limit reached (3/3)</span>
+                    <span>
+                      You have 3 proposals currently in review. To submit a new proposal or proposed changes, please wait for an editor to review them, or withdraw an unneeded proposal in{" "}
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab("list")}
+                        className="font-bold underline hover:opacity-80 cursor-pointer"
+                      >
+                        My Proposals
+                      </button>.
+                    </span>
+                  </div>
+                </div>
+              )}
+
               {/* Title */}
               <div className="space-y-1.5">
                 <label htmlFor="proposal-title" className="text-xs font-medium uppercase tracking-wide text-foreground/70">
@@ -743,16 +790,19 @@ export default function ProposePostModal({
                 )}
                 <button
                   type="submit"
-                  disabled={isSubmitting || (!editingProposalId && pendingCount >= 3)}
+                  disabled={isSubmitting || isQuotaExceeded}
+                  title={isQuotaExceeded ? "Pending quota reached (3/3). Withdraw an unneeded proposal in My Proposals." : undefined}
                   className="rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background transition hover:opacity-90 disabled:opacity-50 cursor-pointer"
                 >
                   {isSubmitting
                     ? "Saving..."
-                    : editingProposalId
-                      ? "Update Proposal"
-                      : revisionTargetBlogId
-                        ? "Submit Proposed Changes"
-                        : "Submit Proposal"}
+                    : isQuotaExceeded
+                      ? "Quota Reached (3/3 Pending)"
+                      : editingProposalId
+                        ? "Update Proposal"
+                        : revisionTargetBlogId
+                          ? "Submit Proposed Changes"
+                          : "Submit Proposal"}
                 </button>
               </div>
             </form>

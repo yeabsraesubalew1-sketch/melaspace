@@ -4,10 +4,10 @@ export default function Footer() {
   return (
     <footer className="border-t border-border mt-24 bg-surface/40 backdrop-blur-xs">
       <div className="mx-auto max-w-6xl px-6 py-14">
-        
+
         {/* Top */}
         <div className="grid gap-12 sm:grid-cols-2 md:grid-cols-4">
-          
+
           {/* Brand */}
           <div className="space-y-4 md:col-span-1">
             <Link href="/" className="group inline-flex items-center gap-1.5 transition-opacity hover:opacity-85">
@@ -119,7 +119,20 @@ export default function Footer() {
                   rel="noopener noreferrer"
                 >
                   <span>Telegram Community</span>
-                  <span className="text-[10px] text-foreground/45">↗</span>
+                  <svg
+                    className="h-3 w-3 text-foreground/45 shrink-0"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M7 17L17 7M17 7H7M17 7V17"
+                    />
+                  </svg>
                 </a>
               </li>
               <li>
@@ -130,7 +143,20 @@ export default function Footer() {
                   rel="noopener noreferrer"
                 >
                   <span>Page Turners Book Club</span>
-                  <span className="text-[10px] text-foreground/45">↗</span>
+                  <svg
+                    className="h-3 w-3 text-foreground/45 shrink-0"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M7 17L17 7M17 7H7M17 7V17"
+                    />
+                  </svg>
                 </a>
               </li>
               <li>

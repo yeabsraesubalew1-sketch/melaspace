@@ -66,21 +66,24 @@ export async function POST(req: Request) {
     await connectDB();
 
     const userObjectId = new Types.ObjectId(auth.session.user.id);
+    const isAdmin = ["root_admin", "super_admin", "manager"].includes(auth.session.user.role);
 
-    // Check quota: only pending proposals count towards the limit
-    const pendingCount = await Proposal.countDocuments({
-      userId: userObjectId,
-      status: "pending",
-    });
+    // Check quota: only non-admins are subject to the pending limit
+    if (!isAdmin) {
+      const pendingCount = await Proposal.countDocuments({
+        userId: userObjectId,
+        status: "pending",
+      });
 
-    if (pendingCount >= MAX_PENDING_PROPOSALS) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: `You have reached the limit of ${MAX_PENDING_PROPOSALS} pending proposals. Please wait until your existing proposals are reviewed.`,
-        },
-        { status: 400 }
-      );
+      if (pendingCount >= MAX_PENDING_PROPOSALS) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: `You have reached the limit of ${MAX_PENDING_PROPOSALS} pending proposals. Please wait until your existing proposals are reviewed, or withdraw an existing proposal in My Proposals.`,
+          },
+          { status: 400 }
+        );
+      }
     }
 
     const body = await req.json();
@@ -118,7 +121,6 @@ export async function POST(req: Request) {
         ? ((content as { blocks: unknown[] }).blocks as Array<{ type?: string; [key: string]: unknown }>)
         : [];
 
-    const isAdmin = ["root_admin", "super_admin", "manager", "author"].includes(auth.session.user.role);
     if (!isAdmin) {
       const imageCount = blocks.filter((b) => b?.type === "image").length;
       const fileCount = blocks.filter((b) => b?.type === "file" || b?.type === "attaches").length;
@@ -147,7 +149,6 @@ export async function POST(req: Request) {
     if (type === "revision" && targetBlogId && Types.ObjectId.isValid(targetBlogId)) {
       const targetBlog = await Blog.findById(targetBlogId).select("_id slug author");
       if (targetBlog) {
-        const isAdmin = ["root_admin", "super_admin", "manager"].includes(auth.session.user.role);
         const isAuthor = targetBlog.author && targetBlog.author.toString() === auth.session.user.id;
         if (!isAdmin && !isAuthor) {
           return NextResponse.json(
