@@ -86,12 +86,24 @@ export async function DELETE(
     // No replies or is a child reply: Remove cleanly
     await Comment.deleteOne({ _id: comment._id });
 
+    let parentCleanedUp = false;
+    let parentIdStr: string | null = null;
+
     if (comment.parentId) {
+      parentIdStr = comment.parentId.toString();
       // Decrement replyCount on parent comment
-      await Comment.updateOne(
+      const parent = await Comment.findOneAndUpdate(
         { _id: comment.parentId },
-        { $inc: { replyCount: -1 } }
+        { $inc: { replyCount: -1 } },
+        { new: true }
       );
+
+      // If parent was already a tombstone (isDeleted: true) and now has 0 replies,
+      // permanently clean up the orphaned tombstone!
+      if (parent && parent.isDeleted && (parent.replyCount || 0) <= 0) {
+        await Comment.deleteOne({ _id: parent._id });
+        parentCleanedUp = true;
+      }
     }
 
     // Decrement total count on blog
@@ -101,6 +113,8 @@ export async function DELETE(
       success: true,
       data: {
         isSoftDeleted: false,
+        parentCleanedUp,
+        parentId: parentIdStr,
         message: isAuthor ? "Comment deleted" : "Comment taken down by moderator",
       },
     });

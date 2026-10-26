@@ -62,6 +62,10 @@ export async function GET(
       filter.parentId = new Types.ObjectId(parentId);
     } else {
       filter.parentId = null;
+      filter.$or = [
+        { isDeleted: false },
+        { isDeleted: true, replyCount: { $gt: 0 } },
+      ];
     }
 
     // Determine sort

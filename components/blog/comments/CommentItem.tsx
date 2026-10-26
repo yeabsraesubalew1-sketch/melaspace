@@ -10,9 +10,10 @@ import type { CommentItemData } from "./CommentTypes";
 interface CommentItemProps {
   comment: CommentItemData;
   blogSlug: string;
-  onCommentDeleted: (id: string, isSoftDeleted: boolean) => void;
+  onCommentDeleted: (id: string, isSoftDeleted: boolean, parentCleanedUp?: boolean) => void;
   onCommentPinned?: (id: string, isPinned: boolean) => void;
   isReply?: boolean;
+  onReplyCreated?: (reply: CommentItemData) => void;
 }
 
 function formatTimeAgo(dateInput: string | Date): string {
@@ -49,6 +50,7 @@ export default function CommentItem({
   onCommentDeleted,
   onCommentPinned,
   isReply = false,
+  onReplyCreated,
 }: CommentItemProps) {
   const { data: session } = useSession();
   const [likesCount, setLikesCount] = useState(comment.likesCount || 0);
@@ -154,7 +156,7 @@ export default function CommentItem({
 
       toast.success(data.data.message || "Comment removed.");
       setShowDeleteConfirm(false);
-      onCommentDeleted(comment.id, data.data.isSoftDeleted);
+      onCommentDeleted(comment.id, data.data.isSoftDeleted, data.data.parentCleanedUp);
     } catch {
       toast.error("Network error while removing comment.");
     } finally {
@@ -190,18 +192,69 @@ export default function CommentItem({
   };
 
   // Handle new reply added to this thread
-  const handleReplyCreated = (newReply: CommentItemData) => {
-    setReplies((prev) => [...prev, newReply]);
+  const handleReplyCreated = async (newReply: CommentItemData) => {
+    setIsReplying(false);
+
+    // If this comment is a child reply, bubble up to the top-level parent!
+    if (isReply && onReplyCreated) {
+      onReplyCreated(newReply);
+      return;
+    }
+
+    // Top-level thread handler:
+    // If replies were not yet loaded, but thread had existing replies, fetch the full thread first
+    if (!repliesLoaded && replyCount > 0) {
+      try {
+        setIsLoadingReplies(true);
+        setShowReplies(true);
+        const res = await fetch(
+          `/api/blogs/${encodeURIComponent(blogSlug)}/comments?parentId=${comment.id}`
+        );
+        const data = await res.json();
+        if (res.ok && data.success) {
+          const fetched: CommentItemData[] = data.data.comments;
+          const exists = fetched.some((r) => r.id === newReply.id);
+          setReplies(exists ? fetched : [...fetched, newReply]);
+          setReplyCount(exists ? fetched.length : fetched.length + 1);
+        } else {
+          setReplies((prev) => [...prev, newReply]);
+          setReplyCount((prev) => prev + 1);
+        }
+      } catch {
+        setReplies((prev) => [...prev, newReply]);
+        setReplyCount((prev) => prev + 1);
+      } finally {
+        setRepliesLoaded(true);
+        setIsLoadingReplies(false);
+      }
+      return;
+    }
+
+    // Standard case: append to replies and reveal immediately
+    setReplies((prev) => {
+      const exists = prev.some((r) => r.id === newReply.id);
+      return exists ? prev : [...prev, newReply];
+    });
     setReplyCount((prev) => prev + 1);
     setShowReplies(true);
     setRepliesLoaded(true);
-    setIsReplying(false);
   };
 
   // Handle deletion of a child reply
-  const handleChildReplyDeleted = (childId: string) => {
+  const handleChildReplyDeleted = (
+    childId: string,
+    _isSoftDeleted?: boolean,
+    parentCleanedUp?: boolean
+  ) => {
     setReplies((prev) => prev.filter((r) => r.id !== childId));
-    setReplyCount((prev) => Math.max(0, prev - 1));
+    const nextReplyCount = Math.max(0, replyCount - 1);
+    setReplyCount(nextReplyCount);
+
+    // If THIS comment was a tombstone (isDeleted === true) and now has 0 replies,
+    // or the server signaled parentCleanedUp, remove this tombstone from view!
+    if ((comment.isDeleted && nextReplyCount === 0) || parentCleanedUp) {
+      onCommentDeleted(comment.id, false);
+    }
   };
 
   const isMelaTeam = Boolean(comment.author?.isMelaTeam);
@@ -504,6 +557,7 @@ export default function CommentItem({
                         blogSlug={blogSlug}
                         onCommentDeleted={handleChildReplyDeleted}
                         isReply={true}
+                        onReplyCreated={handleReplyCreated}
                       />
                     ))
                   )}
