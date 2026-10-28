@@ -41,7 +41,7 @@ export async function GET(
       ? { $or: [{ _id: slug }, { slug }], status: "published" }
       : { slug, status: "published" };
 
-    const blog = await Blog.findOne(query).select("_id author");
+    const blog = await Blog.findOne(query).select("_id author isAnonymous");
     if (!blog) {
       return NextResponse.json({ success: false, error: "Blog not found" }, { status: 404 });
     }
@@ -94,7 +94,7 @@ export async function GET(
     const formattedComments = rawComments.map((c) => {
       const isMelaTeam = Boolean(c.displayAsMelaTeam);
       const isAuthorBlogOwner =
-        blog.author && c.author?._id
+        !blog.isAnonymous && blog.author && c.author?._id
           ? blog.author.toString() === c.author._id.toString()
           : false;
 
@@ -240,7 +240,7 @@ export async function POST(
       ? { $or: [{ _id: slug }, { slug }], status: "published" }
       : { slug, status: "published" };
 
-    const blog = await Blog.findOne(query).select("_id author");
+    const blog = await Blog.findOne(query).select("_id author isAnonymous");
     if (!blog) {
       return NextResponse.json({ success: false, error: "Blog not found" }, { status: 404 });
     }
@@ -358,7 +358,7 @@ export async function POST(
     }
 
     const isAuthorBlogOwner =
-      blog.author && populated.author?._id
+      !blog.isAnonymous && blog.author && populated.author?._id
         ? blog.author.toString() === populated.author._id.toString()
         : false;
 
